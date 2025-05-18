@@ -23,7 +23,15 @@ credentials:
       failed_login_attempts: 0
       first_name: Boris
       last_name: Wiessler
-      logged_in: false
+      logged_in: true
       password: $2b$12$aQAZto2jsgpTL.KB.gOR0e90URg3LBtYu90cexKE/sun5GEq8fITy
       roles:
       - CEO
+    thunder:
+      email: im.wiessler@gmail.com
+      first_name: Immanuel
+      last_name: Wiessler
+      logged_in: false
+      password: $2b$12$bZIiG01TGLjo5RTkgit3HeoGeAmRK1h3IjsQ6AEiMljLO.uQ1K51e
+      roles:
+      - employee

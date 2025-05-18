@@ -2,6 +2,7 @@ import time
 import yaml
 import sqlite3
 import arrow
+import pandas as pd
 import streamlit_shadcn_ui as u
 from yaml.loader import SafeLoader
 import streamlit_authenticator as stauth
@@ -11,6 +12,8 @@ from streamlit_card import card
 from streamlit_autorefresh import st_autorefresh
 import databaseManagement as db
 from streamlit_datalist import stDatalist
+import pygwalker as pyg
+
 
 
 
@@ -77,16 +80,18 @@ try:
 
             tables_names=db.get_table_names()
             selected_table=st.selectbox("Select a table to view",tables_names)
-            print(selected_table)
-
             current_count = 0
             project_df=db.convertDBToDataframe(selected_table)
+            pan_form=project_df.to_pandas()
             if project_df is None or project_df.is_empty():
                 st.warning(f"⚠️ No data found or failed to load table: {selected_table}.")
 
             else:
-                st.dataframe(data=project_df)
+                st.dataframe(data=project_df, use_container_width=True)
                 current_count = len(project_df)
+                if u.button("Click here to view data ", key='styled_btn_tailwind', class_name="bg-green-800 text-white"):
+                    pyg.walk(pan_form)
+
             if "last_updated" not in st.session_state:
                 st.session_state["last_updated"] = arrow.utcnow()
                 st.session_state["last_row_count"] = current_count
@@ -103,16 +108,98 @@ try:
 
 
             st.markdown("---")
-            st.subheader("🌉 Project Management")
-            with st.expander("➕ Add New Project"):
-                with st.form("add_project_form"):
-                    new_project_name = st.text_input("Enter new project name")
-                    project_description=st.text_input("Enter project description")
-                    submitted = st.form_submit_button("Add Project",type='primary')
+            st.subheader("💼 Management")
 
-                if submitted:
+            with st.expander("➕➖ Add or remove  New Project"):
+                modeToRemoveProject = st.toggle("Tick to remove project", key="RemoveProject")
+                if modeToRemoveProject:
+                    with st.form("remove_project_form"):
+                        project_names=db.get_project_names()
+                        if len(project_names)==0:
+                            st.warning("No projects found")
+                            submitted = st.form_submit_button(f"Remove project ", type='primary')
+
+                        else:
+                            project_to_remove=stDatalist("Enter the name the name of the project you want to remove",options=project_names)
+                            #new_project_name = st.text_input("Enter the project name you want to remove")
+                            submitted = st.form_submit_button(f"Remove project ", type='primary')
+
+
+
+                else:
+                    with st.form("add_project_form"):
+
+                        new_project_name = st.text_input("Enter new project name")
+                        project_description=st.text_input("Enter project description")
+                        client_info=st.text_input("Client name")
+                        submitted = st.form_submit_button("Add Project",type='primary')
+
+                if submitted and modeToRemoveProject==False:
                     db.add_project(new_project_name,project_description)
                     st.success("Project added successfully.")
+                    st.rerun()
+
+                if submitted and modeToRemoveProject==True:
+                    print(project_to_remove)
+                    db.delete_Project_or_delete_emp(project_to_remove,mode=0)
+                    st.success(f"{project_to_remove} has been removed successfully.")
+
+
+            with st.expander(" 🧑‍💼 Employee management"):
+
+                modeToRemoveEmployee = st.toggle("Tick to remove Employee",key="RemoveEmployee")
+                emp_names=db.get_employees()
+                if modeToRemoveEmployee:
+                    with st.form("remove_employee_form"):
+                        if len(emp_names) == 0:
+                            st.warning("No Employee found")
+                            submittedToRemoveEmp = st.form_submit_button(f"Remove Employee  ", type='primary')
+                        else:
+                            emp_to_remove = stDatalist("Enter the name the employee of the project you want to remove",
+                                                       options=emp_names)
+                            submittedToRemoveEmp = st.form_submit_button(f"Remove Employee ", type='primary')
+
+
+                        if submittedToRemoveEmp and modeToRemoveEmployee == True:
+                            first_name,last_name= emp_to_remove.split(" ")
+                            db.delete_Project_or_delete_emp(emp_first_name=first_name,emp_last_name=last_name,mode=1)
+                            st.success(f'Employee {emp_to_remove} has been removed successfully')
+
+
+
+                else:
+                    try:
+                        email_of_registered_user, \
+                            username_of_registered_user, \
+                            name_of_registered_user = authenticator.register_user(password_hint=False, captcha=False,roles=["employee"])
+                        if email_of_registered_user:
+                            st.success('User registered successfully')
+                            first_name,last_name=name_of_registered_user.split(" ")
+                            db.insert_new_emp(first_name,last_name,email_of_registered_user)
+                    except Exception as e:
+                        st.error(e)
+
+
+
+
+
+
+
+
+
+
+                '''
+                with st.form("management_form"):
+                    employee_first_name = st.text_input("Enter first name")
+                    employee_last_name = st.text_input("Enter last name")
+                    submitted=st.form_submit_button("Add employee",type='primary')
+                
+
+                if submitted:
+                    db.insert_new_emp(employee_first_name,employee_last_name)
+                    st.success("Employee added successfully.")
+                '''
+
 
 
 
@@ -156,6 +243,7 @@ try:
 
 except Exception as e:
     st.error(e)
+
 
 # Save updated config (optional if login data changes during session)
 with open('config.yaml', 'w') as file:
