@@ -23,7 +23,7 @@ credentials:
       failed_login_attempts: 0
       first_name: Boris
       last_name: Wiessler
-      logged_in: true
+      logged_in: false
       password: $2b$12$aQAZto2jsgpTL.KB.gOR0e90URg3LBtYu90cexKE/sun5GEq8fITy
       roles:
       - CEO

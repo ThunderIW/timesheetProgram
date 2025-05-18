@@ -152,7 +152,7 @@ try:
                 if modeToRemoveEmployee:
                     with st.form("remove_employee_form"):
                         if len(emp_names) == 0:
-                            st.warning("No Employee found")
+                            st.warning("No Employees found")
                             submittedToRemoveEmp = st.form_submit_button(f"Remove Employee  ", type='primary')
                         else:
                             emp_to_remove = stDatalist("Enter the name the employee of the project you want to remove",
