@@ -161,6 +161,10 @@ def get_table_names():
     conn.close()
     return tables
 
+
+def update():
+    print("")
+
 def add_project(productName:str,projectDescrption:str,clientName:str):
     try:
         conn = get_connection()
@@ -272,6 +276,59 @@ def get_emp_code():
         return [row[0] for row in rows]
     except sqlite3.Error as e:
         print(e)
+
+
+def update_project_info(projectName:str,choiceToUpdate:str,newValue:str):
+    print(choiceToUpdate)
+    try:
+        conn=get_connection()
+        cursor=conn.cursor()
+        cursor.execute("""SELECT projectID FROM Projects WHERE productName=? """,(projectName,))
+        result=cursor.fetchone()
+        if result is None:
+            f"❌ Project '{projectName}' not found."
+        projectID=result[0]
+
+        if choiceToUpdate == "Project Name":
+            cursor.execute("""
+            UPDATE Projects SET productName=? WHERE projectID=?
+            """,(newValue,projectID))
+            conn.commit()
+        if choiceToUpdate == "Project Description":
+            cursor.execute("""
+            UPDATE Projects SET projectDescription=? WHERE projectID=?
+            """,(newValue,projectID))
+            conn.commit()
+
+        if choiceToUpdate == "Client Name":
+            cursor.execute("""UPDATE Projects SET clientName=? WHERE projectID=?""",(newValue,projectID))
+            conn.commit()
+
+
+    except sqlite3.IntegrityError as e:
+        return f"Integrity error: {e}"
+    except sqlite3.Error as e:
+        return f"Database error: {e}"
+    finally:
+        conn.close()
+
+def update_emp_info(first_name,last_name,dataToUpdate):
+    try:
+        conn=get_connection()
+        cursor=conn.cursor()
+        if type(dataToUpdate)==str:
+            cursor.execute("UPDATE Employees SET email=? WHERE =? and lastName=?",(dataToUpdate,first_name,last_name))
+            conn.commit()
+        if type(dataToUpdate)==int:
+            cursor.execute("UPDATE Employees SET ratePerHr=? WHERE firstName=? and lastName=?", (dataToUpdate, first_name, last_name))
+            conn.commit()
+    except sqlite3.IntegrityError as e:
+        return f"Integrity error: {e}"
+    except sqlite3.Error as e:
+        return f"Database error: {e}"
+    finally:
+        conn.close()
+
 
 def insert_new_emp(firstName:str,lastName,email:str,role:str,empCode:str,ratePerHour:int):
     try:
