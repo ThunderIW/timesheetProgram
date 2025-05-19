@@ -173,8 +173,7 @@ try:
                         if update_submit_button_for_project and len(updated_value_project)>0 and len(what_to_update_project)>0:
                             print(db.update_project_info(project_to_update,what_to_update_project,updated_value_project))
                             st.success(f"Project {project_to_update} been updated successfully")
-                            time.sleep(1.5)
-                            st.rerun()
+
 
                         if len(project_to_update)==0:
                             st.error("Please select a project name")
