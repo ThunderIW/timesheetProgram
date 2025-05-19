@@ -165,12 +165,12 @@ def get_table_names():
 def update():
     print("")
 
-def add_project(productName:str,projectDescrption:str,clientName:str):
+def add_project(productName:str,projectDescrption:str,clientName:str,productBudget:float):
     try:
         conn = get_connection()
         cursor = conn.cursor()
         cursor.execute("""
-        INSERT INTO Projects(productName,projectDescription,clientName) VALUES (?,?,?)""",(productName,projectDescrption,clientName))
+        INSERT INTO Projects(productName,projectDescription,clientName,projectBudget) VALUES (?,?,?,?)""",(productName,projectDescrption,clientName,productBudget))
         conn.commit()
         return "success"
 
@@ -303,6 +303,12 @@ def update_project_info(projectName:str,choiceToUpdate:str,newValue:str):
         if choiceToUpdate == "Client Name":
             cursor.execute("""UPDATE Projects SET clientName=? WHERE projectID=?""",(newValue,projectID))
             conn.commit()
+
+        if choiceToUpdate == "Project Budget":
+            money=float(newValue)
+            cursor.execute("""UPDATE Projects SET projectBudget=? WHERE projectID=?""", (money, projectID))
+            conn.commit()
+
 
 
     except sqlite3.IntegrityError as e:

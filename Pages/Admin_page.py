@@ -147,15 +147,24 @@ try:
                         new_project_name = st.text_input("Enter new project name",key="new_project_name_input")
                         project_description=st.text_input("Enter project description",key="project_desc_input")
                         client_info=st.text_input("Client name",key="client_info_input")
+                        project_budget=st.number_input(" 💵 Project Budget (TWD)",min_value=0.0,value=0.0,step=0.5,format="%.2f")
                         submitted = st.form_submit_button("Submit project",type='primary')
 
                         if submitted:
-                            result_for_project_insertion=db.add_project(new_project_name,project_description,client_info)
+                            result_for_project_insertion=""
+                            if len(new_project_name)==0 and len(project_description)==0 and len(client_info)==0 and project_budget==0:
+                                st.error("Please type a project name, project description,client info, and project budget")
+                            else:
+                                result_for_project_insertion=db.add_project(new_project_name,project_description,client_info,project_budget)
+
                             if "Integrity error: UNIQUE constraint failed: Projects.productName" in result_for_project_insertion:
                                 st.error(f"Project **{new_project_name}** has been already been entered")
                                 time.sleep(1.5)
                                 st.rerun()
-                            else:
+
+
+
+                            if len(new_project_name)>0 and len(project_description)>0 and len(client_info)>0 and project_budget!=0:
                                 st.success(f"Project {new_project_name} added successfully.")
                                 time.sleep(1.5)
                                 st.rerun()
@@ -166,21 +175,21 @@ try:
                                 update_submit_button_for_project = st.form_submit_button(f"Remove project ", type='primary')
                             else:
                                 project_to_update=st.selectbox("Please select the project you want to update",options=[""]+project_names)
-                                what_to_update_project = st.selectbox("Please select what you want to update", options=["","Project Name", "Client Name", "Project Description"])
+                                what_to_update_project = st.selectbox("Please select what you want to update", options=["","Project Name", "Client Name", "Project Description","Project Budget"])
                                 updated_value_project = st.text_input("Please enter the **new client** or **project name** or **project description**")
                                 update_submit_button_for_project = st.form_submit_button(f"Update project ", type='primary')
 
                         if update_submit_button_for_project and len(updated_value_project)>0 and len(what_to_update_project)>0:
                             print(db.update_project_info(project_to_update,what_to_update_project,updated_value_project))
-                            st.success(f"Project {project_to_update} been updated successfully")
+                            st.success(f"Project {project_to_update} has been updated successfully")
 
-
-                        if len(project_to_update)==0:
+                        if len(project_to_update) == 0:
                             st.error("Please select a project name")
-                        if len(what_to_update_project)==0:
+                        if len(what_to_update_project) == 0:
                             st.error("Please select what you what to update")
-                        if len(updated_value_project)==0:
+                        if len(updated_value_project) == 0:
                             st.error(f"Please type what is your new value for {what_to_update_project}")
+
 
 
 
