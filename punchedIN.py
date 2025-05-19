@@ -3,6 +3,7 @@ import yaml
 import sqlite3
 import arrow
 import pandas as pd
+import polars as p
 import streamlit_shadcn_ui as u
 from yaml.loader import SafeLoader
 import streamlit_authenticator as stauth
@@ -13,6 +14,8 @@ from streamlit_autorefresh import st_autorefresh
 import databaseManagement as db
 from streamlit_datalist import stDatalist
 import pygwalker as pyg
+from streamlit_tags import st_tags, st_tags_sidebar
+
 
 
 
@@ -58,7 +61,7 @@ st.header('Wiecon Time Management System')
 
 # Login section
 try:
-    authenticator.login(fields={'Form name': 'Employee login', 'Username': 'Employee code', 'Password': 'Employee password'})
+    authenticator.login(fields={'Form name': '', 'Username': 'Employee code', 'Password': 'Employee password'})
 
     if st.session_state.get('authentication_status'):
         st.audio("login.wav", format='audio/wav', autoplay=True, )
@@ -88,6 +91,7 @@ try:
 
             else:
                 st.dataframe(data=project_df, use_container_width=True)
+
                 current_count = len(project_df)
                 if u.button("Click here to view data ", key='styled_btn_tailwind', class_name="bg-green-800 text-white"):
                     pyg.walk(pan_form)
@@ -120,7 +124,7 @@ try:
                             submitted = st.form_submit_button(f"Remove project ", type='primary')
 
                         else:
-                            project_to_remove=stDatalist("Enter the name the name of the project you want to remove",options=project_names)
+                            project_to_remove=st.selectbox("Enter the name the name of the project you want to remove",options=project_names)
                             #new_project_name = st.text_input("Enter the project name you want to remove")
                             submitted = st.form_submit_button(f"Remove project ", type='primary')
 
@@ -132,11 +136,12 @@ try:
                         new_project_name = st.text_input("Enter new project name")
                         project_description=st.text_input("Enter project description")
                         client_info=st.text_input("Client name")
-                        submitted = st.form_submit_button("Add Project",type='primary')
+                        submitted = st.form_submit_button("Submit project",type='primary')
 
                 if submitted and modeToRemoveProject==False:
                     db.add_project(new_project_name,project_description)
                     st.success("Project added successfully.")
+                    time.sleep(0.3)
                     st.rerun()
 
                 if submitted and modeToRemoveProject==True:
@@ -155,7 +160,7 @@ try:
                             st.warning("No Employees found")
                             submittedToRemoveEmp = st.form_submit_button(f"Remove Employee  ", type='primary')
                         else:
-                            emp_to_remove = stDatalist("Enter the name the employee of the project you want to remove",
+                            emp_to_remove = st.selectbox("Enter the name the employee of the project you want to remove",
                                                        options=emp_names)
                             submittedToRemoveEmp = st.form_submit_button(f"Remove Employee ", type='primary')
 
@@ -164,20 +169,34 @@ try:
                             first_name,last_name= emp_to_remove.split(" ")
                             db.delete_Project_or_delete_emp(emp_first_name=first_name,emp_last_name=last_name,mode=1)
                             st.success(f'Employee {emp_to_remove} has been removed successfully')
+                            time.sleep(0.3)
+                            st.rerun()
 
 
 
                 else:
+
+
+                    emp_role=st.selectbox(label="Please select what role does this person have", options=['CAD', 'Engineer'])
+                    st.markdown(
+                        "<span style='color:red; font-weight:bold;'>After you have chosen this please select the register button below to register the employee.</span>",
+                        unsafe_allow_html=True
+                    )
+                    #st.warning("After you have chosen this please select the register below to register the employee", )
                     try:
                         email_of_registered_user, \
                             username_of_registered_user, \
-                            name_of_registered_user = authenticator.register_user(password_hint=False, captcha=False,roles=["employee"])
+                            name_of_registered_user = authenticator.register_user(password_hint=False, captcha=False,roles=["employee",emp_role],fields={"Form name":"Register new Employee","Register":"Register employee"}, clear_on_submit=True)
+
+
+
                         if email_of_registered_user:
                             st.success('User registered successfully')
                             first_name,last_name=name_of_registered_user.split(" ")
-                            db.insert_new_emp(first_name,last_name,email_of_registered_user)
+                            db.insert_new_emp(first_name,last_name,email_of_registered_user,emp_role)
                     except Exception as e:
                         st.error(e)
+
 
 
 
@@ -233,7 +252,6 @@ try:
                     db.calculate_total_hours_worked(employee_id)
                     st.success("End time and task saved!")
                     st.snow()
-
         authenticator.logout('Logout')
 
     elif st.session_state.get('authentication_status') is False:

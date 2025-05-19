@@ -12,6 +12,18 @@ def get_connection():
     return sqlite3.connect(DB_NAME,check_same_thread=False)
 
 
+def get_emp_ID(empCode:str):
+    try:
+        conn=get_connection()
+        cursor=conn.cursor()
+        cursor.execute("""
+        SELECT employeeID FROM Employees WHERE empCode=?""",(empCode,))
+        empID = cursor.fetchone()
+        conn.close()
+        return empID
+    except sqlite3.Error as e:
+        print(e)
+
 
 
 def fetch_employees():
@@ -28,7 +40,7 @@ def fetch_employees():
 
 def insert_Work_done(employeeID:int,projectWorkedonID:int,StartTime:str,endTime:str):
     try:
-        print("HIT")
+        print("HIT_insert")
         conn = get_connection()
         utc = arrow.utcnow()
         local = utc.to('Asia/Taipei')
@@ -48,32 +60,32 @@ def insert_Work_done(employeeID:int,projectWorkedonID:int,StartTime:str,endTime:
 
 def update_work_done(endTime: str, projectWorkOnID: int, empolyeeID: int):
     try:
-        print("HIT_2")
+        print("HIT_UPDATE")
         conn = get_connection()
         cursor = conn.cursor()
 
-        # Step 1: Get the rowid of the most recent open session
+        # Step 1: Get the latest record for the employee
         cursor.execute("""
-            SELECT rowid FROM HOURSWORKED
-            WHERE employeeID=? AND EndTime=''
-            ORDER BY rowid DESC
+            SELECT HoursWorkedID FROM HOURSWORKED
+            WHERE employeeID = ?
+            ORDER BY HoursWorkedID DESC
             LIMIT 1
         """, (empolyeeID,))
         result = cursor.fetchone()
 
-        if result:
-            rowid = result[0]
+        if result is not None:
+            hours_worked_id = result[0]  # ✅ consistent variable name
 
-            # Step 2: Update that specific row
+            # Step 2: Update that row
             cursor.execute("""
                 UPDATE HOURSWORKED
-                SET EndTime=?, projectWorkedOnID=?
-                WHERE rowid=?
-            """, (endTime, projectWorkOnID, rowid))
+                SET EndTime = ?, projectWorkedONID = ?
+                WHERE HoursWorkedID = ?
+            """, (endTime, projectWorkOnID, hours_worked_id))
             conn.commit()
-            return True
+            print(f"✅ Successfully updated HoursWorkedID = {hours_worked_id}")
         else:
-            return "No open session found to update."
+            print(f"⚠️ No matching row found for employeeID = {empolyeeID}")
 
     except sqlite3.IntegrityError as e:
         return f"Integrity error: {e}"
@@ -81,6 +93,9 @@ def update_work_done(endTime: str, projectWorkOnID: int, empolyeeID: int):
         return f"Database error: {e}"
     finally:
         conn.close()
+
+
+
 
 def get_times(employeeID: str):
     try:
@@ -116,6 +131,8 @@ def calculate_total_hours_worked(empID):
         print(today)
         start_str = rows[0][0]
         end_str = rows[0][1]
+        print(start_str)
+        print(end_str)
 
         start_time = arrow.get(f"{today} {start_str}", "YYYY-MM-DD HH:mm")
         end_time = arrow.get(f"{today} {end_str}", "YYYY-MM-DD HH:mm")
@@ -226,14 +243,42 @@ def get_project_names():
     except sqlite3.Error as e:
         print(e)
 
-def insert_new_emp(firstName:str,lastName,email:str):
+def get_emp_name_by_code(emp_code:str):
     try:
         conn=get_connection()
         cursor=conn.cursor()
         cursor.execute("""
-        INSERT INTO Employees(firstName,lastName,email) VALUES (?,?,?)
+        select firstName, lastName from Employees WHERE empCode=?
         
-        """,(firstName,lastName,email))
+        """,(emp_code,))
+        rows = cursor.fetchall()
+        conn.close()
+        firstName=rows[0][0]
+        lastName=rows[0][1]
+        return firstName, lastName
+    except sqlite3.Error as e:
+        print(e)
+def get_emp_code():
+    try:
+        conn=get_connection()
+        cursor=conn.cursor()
+        cursor.execute("""
+        SELECT empcode FROM Employees
+        """)
+        rows = cursor.fetchall()
+        conn.close()
+        return [row[0] for row in rows]
+    except sqlite3.Error as e:
+        print(e)
+
+def insert_new_emp(firstName:str,lastName,email:str,role:str,empCode:str):
+    try:
+        conn=get_connection()
+        cursor=conn.cursor()
+        cursor.execute("""
+        INSERT INTO Employees(firstName,lastName,email,role,empCode) VALUES (?,?,?,?,?)
+        
+        """,(firstName,lastName,email,role,empCode))
         conn.commit()
 
     except sqlite3.IntegrityError as e:
@@ -243,6 +288,20 @@ def insert_new_emp(firstName:str,lastName,email:str):
     finally:
         conn.close()
 
+
+def get_project_id(productName:str):
+    try:
+        conn=get_connection()
+        cursor=conn.cursor()
+        cursor.execute(
+        """SELECT projectID FROM Projects WHERE productName=?
+        """,(productName,))
+        rows = cursor.fetchone()
+        conn.close()
+        return rows
+
+    except sqlite3.Error as e:
+        print(e)
 
 def convertDBToDataframe(tableName:str):
     try:
@@ -266,7 +325,6 @@ def convertDBToDataframe(tableName:str):
 
     except sqlite3.Error as e:
         print(e)
-
 
 
 

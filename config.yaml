@@ -4,34 +4,12 @@ cookie:
   name: auth_cookie
 credentials:
   usernames:
-    '1':
-      email: 001@gmail.com
-      failed_login_attempts: 0
-      first_name: Jane
-      last_name: Doe
-      logged_in: false
-      password: $2b$12$81TVrbNt.nH0uSQiHt5yle07BRQ1v3dnDqVhpUM.yzcmnkbYet4Ae
-    '2':
-      email: 002@gmail.com
-      failed_login_attempts: 0
-      first_name: John
-      last_name: smith
-      logged_in: false
-      password: $2b$12$103R9hU2snypSWQKrEo05ufspw66ceGkVLuc1j3T/hmdazOPf0SK.
     boris:
       email: boris.wiessler@gmail.com
       failed_login_attempts: 0
       first_name: Boris
       last_name: Wiessler
-      logged_in: false
+      logged_in: true
       password: $2b$12$aQAZto2jsgpTL.KB.gOR0e90URg3LBtYu90cexKE/sun5GEq8fITy
       roles:
       - CEO
-    thunder:
-      email: im.wiessler@gmail.com
-      first_name: Immanuel
-      last_name: Wiessler
-      logged_in: false
-      password: $2b$12$bZIiG01TGLjo5RTkgit3HeoGeAmRK1h3IjsQ6AEiMljLO.uQ1K51e
-      roles:
-      - employee
