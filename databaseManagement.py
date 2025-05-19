@@ -161,13 +161,14 @@ def get_table_names():
     conn.close()
     return tables
 
-def add_project(productName:str,projectDescrption:str):
+def add_project(productName:str,projectDescrption:str,clientName:str):
     try:
         conn = get_connection()
         cursor = conn.cursor()
         cursor.execute("""
-        INSERT INTO Projects(productName,projectDescription) VALUES (?,?)""",(productName,projectDescrption))
+        INSERT INTO Projects(productName,projectDescription,clientName) VALUES (?,?,?)""",(productName,projectDescrption,clientName))
         conn.commit()
+        return "success"
 
     except sqlite3.IntegrityError as e:
         return f"Integrity error: {e}"
@@ -175,6 +176,7 @@ def add_project(productName:str,projectDescrption:str):
         return f"Database error: {e}"
     finally:
         conn.close()
+
 
 def remove_emp(name:str):
     print("TEST")
@@ -271,15 +273,16 @@ def get_emp_code():
     except sqlite3.Error as e:
         print(e)
 
-def insert_new_emp(firstName:str,lastName,email:str,role:str,empCode:str):
+def insert_new_emp(firstName:str,lastName,email:str,role:str,empCode:str,ratePerHour:int):
     try:
         conn=get_connection()
         cursor=conn.cursor()
         cursor.execute("""
-        INSERT INTO Employees(firstName,lastName,email,role,empCode) VALUES (?,?,?,?,?)
+        INSERT INTO Employees(firstName,lastName,email,role,empCode,ratePerHr) VALUES (?,?,?,?,?,?)
         
-        """,(firstName,lastName,email,role,empCode))
+        """,(firstName,lastName,email,role,empCode,ratePerHour))
         conn.commit()
+        return "success"
 
     except sqlite3.IntegrityError as e:
         return f"Integrity error: {e}"
@@ -287,6 +290,7 @@ def insert_new_emp(firstName:str,lastName,email:str,role:str,empCode:str):
         return f"Database error: {e}"
     finally:
         conn.close()
+
 
 
 def get_project_id(productName:str):

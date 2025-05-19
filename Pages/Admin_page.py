@@ -131,10 +131,15 @@ try:
                         submitted = st.form_submit_button("Submit project",type='primary')
 
                 if submitted and modeToRemoveProject==False:
-                    db.add_project(new_project_name,project_description)
-                    st.success("Project added successfully.")
-                    time.sleep(0.3)
-                    st.rerun()
+                    result_for_project_insertion=db.add_project(new_project_name,project_description,client_info)
+                    if "Integrity error: UNIQUE constraint failed: Projects.productName" in result_for_project_insertion:
+                        st.error(f"Project **{new_project_name}** has been already been entered")
+                        time.sleep(1.5)
+                        st.rerun()
+                    else:
+                        st.success(f"Project {new_project_name} added successfully.")
+                        time.sleep(1)
+                        st.rerun()
 
                 if submitted and modeToRemoveProject==True:
                     print(project_to_remove)
@@ -179,10 +184,22 @@ try:
 
                 if submittedEmp and modeToRemoveEmployee == False:
                     new_emp_number = generate_next_emp_number()
-                    db.insert_new_emp(first_name_for_submission, last_name_for_submission, email, emp_role,new_emp_number)
-                    st.success(f'Employee {first_name_for_submission} {last_name_for_submission} has been added successfully')
-                    time.sleep(0.5)
-                    st.rerun()
+                    if len(email)==0:
+                        safe_first = first_name_for_submission.lower().replace(" ", "")
+                        safe_last = last_name_for_submission.lower().replace(" ", "")
+                        email = f"{safe_first}.{safe_last}.{new_emp_number}@gmail.com"
+
+                    result_for_emp_insertion=db.insert_new_emp(first_name_for_submission, last_name_for_submission, email, emp_role,new_emp_number,ratePerHour)
+                    print(result_for_emp_insertion)
+                    if "Integrity error: UNIQUE constraint failed: Employees.email" in result_for_emp_insertion:
+
+                        st.error(f"**{email}** has been already been used please use another email")
+                        time.sleep(1.5)
+                        st.rerun()
+                    if "success"  in result_for_emp_insertion:
+                        st.success(f'Employee {first_name_for_submission} {last_name_for_submission} has been added successfully')
+                        time.sleep(1.5)
+                        st.rerun()
 
                     #st.warning("After you have chosen this please select the register below to register the employee", )
 
