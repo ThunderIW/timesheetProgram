@@ -46,12 +46,7 @@ roles = st.session_state.get("roles", [])  # ✅ Safely fetch roles or default t
 st.title("Report Page")
 
 
-"""
-        if project_to_view and project_to_view!="":
-            st.write(project_to_view)
-        if project_to_view and project_to_view=="":
-            st.error("Please select the project you want to view")
-        """
+
 
 
 
