@@ -13,6 +13,7 @@ def get_connection():
 
 
 def get_emp_ID(empCode:str):
+    print("INSIDE",empCode)
     try:
         conn=get_connection()
         cursor=conn.cursor()
@@ -393,6 +394,16 @@ def convertDBToDataframe(tableName:str):
     except sqlite3.Error as e:
         print(e)
 
+
+
+
+user=get_emp_code()
+#get_emp_name_by_code()
+emp_list=[]
+for i in user:
+    first,last=get_emp_name_by_code(i)
+    codePlusName=f"{i}:{first}_{last}"
+    emp_list.append(codePlusName)
 
 
 

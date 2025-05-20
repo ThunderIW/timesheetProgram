@@ -36,8 +36,13 @@ if st.session_state.clear_project_name:
     st.session_state.clear_project_name = False
     st.rerun()
 
-# Load employee options
+# Load employee code
 user = db.get_emp_code()
+emp_list=[]
+for emp_id in user:
+    first, last = db.get_emp_name_by_code(emp_id)
+    codePlusName=f"{emp_id}: {first} {last}"
+    emp_list.append(codePlusName)
 
 # Time formatting helper
 def getWorkingTime(type: int):
@@ -59,15 +64,18 @@ st.title('Wiecon Time Management System')
 # ✅ Selectbox for employee code (with blank option for reset)
 emp_code = st.selectbox(
     "Select your employee number (選擇您的員工號碼)",
-    options=[""] + user,
+    options=[""] + emp_list,
     key="emp_code_input"
 )
 
 if emp_code and emp_code != "":
-    emp_id = db.get_emp_ID(emp_code)[0]
-    print(emp_id)
+    emp_number=str(emp_code.split(":")[0])
 
-    first, last = db.get_emp_name_by_code(emp_code)
+    emp_id = db.get_emp_ID(emp_number)[0]
+    print("emp_id",emp_id)
+    #print(emp_id)
+
+    first, last = db.get_emp_name_by_code(emp_number)
     st.write(f"Welcome **{first} {last}**")
     st.write(f"The current date and time is **{getWorkingTime(1)}**")
 
@@ -102,7 +110,9 @@ if emp_code and emp_code != "":
         except TypeError:
             pass
 
-    elif emp_code in user and emp_code not in st.session_state["clocked_in_user"]:
+    elif emp_number in user and emp_code not in st.session_state["clocked_in_user"]:
+        print("HIT clocked IN")
+        print(emp_id)
         start_time = getWorkingTime(0)
         st.session_state["clocked_in_user"].append(emp_code)
         db.insert_Work_done(employeeID=emp_id, StartTime=start_time, endTime="", projectWorkedonID=0)
