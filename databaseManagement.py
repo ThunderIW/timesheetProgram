@@ -185,15 +185,19 @@ def add_project(productName:str,projectDescrption:str,clientName:str,productBudg
 
 
 def get_projects_code(project_name:str=""):
-    conn=get_connection()
-    cursor=conn.cursor()
+    try:
+        conn=get_connection()
+        cursor=conn.cursor()
 
-    cursor.execute("""
+        cursor.execute("""
         SELECT projectCode FROM Projects WHERE productName=?
         """, (project_name,))
-    rows=cursor.fetchone()
-    conn.close()
-    return rows
+        rows=cursor.fetchone()
+        conn.close()
+        return rows
+
+    except sqlite3.Error as e:
+        return f"Database error: {e}"
 
 
 
@@ -373,6 +377,20 @@ def insert_new_emp(firstName:str, lastName, email:str, role:str, empCode:str, ra
     finally:
         conn.close()
 
+def get_emp_password(empId:int):
+    try:
+        conn=get_connection()
+        cursor=conn.cursor()
+        cursor.execute("""
+        SELECT EmpPassword FROM Employees WHERE employeeID=?
+        
+        """,(empId,))
+        rows=cursor.fetchone()
+        conn.close()
+        return rows[0]
+
+    except sqlite3.Error as e:
+        return f"Database error: {e}"
 
 
 def get_project_id(productName:str):
@@ -415,5 +433,5 @@ def convertDBToDataframe(tableName:str):
 
 
 
-
+print(get_emp_password(6))
 

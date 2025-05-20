@@ -5,6 +5,11 @@ import arrow
 import streamlit_shadcn_ui as ui
 
 
+
+
+
+
+
 # Initialize session state keys safely
 if "clocked_in_user" not in st.session_state:
     st.session_state["clocked_in_user"] = []
@@ -95,12 +100,12 @@ if emp_code and emp_code != "":
                 key="project_name_input"
             )
             if project_name:
-                print(project_name.split(":")[1])
                 project_id = db.get_project_id(project_name.split(":")[1])[0]
                 #print("project:", project_id)
+                password = st.text_input("🔑 Please enter your employee passcode to confirm clock out ")
                 clock_out = ui.button("Clock out/時鐘輸出", key='styled_btn_tailwind', class_name="bg-green-800 text-white")
-                #password=st.text_input("please enter your employee passcode")
-                if clock_out:
+
+                if clock_out and password==db.get_emp_password(emp_id):
                     end_time = getWorkingTime(0)
                     db.update_work_done(endTime=end_time, projectWorkOnID=project_id, empolyeeID=emp_id)
                     st.balloons()
@@ -112,6 +117,8 @@ if emp_code and emp_code != "":
                     st.session_state.clear_emp_code = True
                     st.session_state.clear_project_name = True
                     st.rerun()
+                if clock_out and password != db.get_emp_password(emp_id):
+                    st.error(f"Please enter your employee password **{first} {last}**.")
 
         except TypeError:
             pass
