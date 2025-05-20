@@ -92,7 +92,7 @@ if emp_code and emp_code != "":
             project_code_plus_name_list = []
             for project_name in project_names:
                 project_code=db.get_projects_code(project_name)
-                project_code_plus_name=f"{project_code[0]} :{project_name}"
+                project_code_plus_name=f"{project_code[0]}:{project_name}"
                 project_code_plus_name_list.append(project_code_plus_name)
             project_name = st.selectbox(
                 "Enter the project name",
