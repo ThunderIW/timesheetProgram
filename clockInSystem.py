@@ -90,13 +90,13 @@ if emp_code and emp_code != "":
             )
             if project_name:
                 project_id = db.get_project_id(project_name)[0]
-                print("project:", project_id)
+                #print("project:", project_id)
 
                 clock_out = ui.button("Clock out/時鐘輸出", key='styled_btn_tailwind', class_name="bg-green-800 text-white")
                 password=st.text_input("please enter your employee passcode")
                 if clock_out:
                     end_time = getWorkingTime(0)
-                    print(db.update_work_done(endTime=end_time, projectWorkOnID=project_id, empolyeeID=emp_id))
+                    db.update_work_done(endTime=end_time, projectWorkOnID=project_id, empolyeeID=emp_id)
                     st.balloons()
                     st.session_state["clocked_in_user"].remove(emp_code)
                     st.success(f"{emp_code} clocked out at **{getWorkingTime(1)}**.")
