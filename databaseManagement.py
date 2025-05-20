@@ -336,14 +336,14 @@ def update_emp_info(first_name,last_name,dataToUpdate):
         conn.close()
 
 
-def insert_new_emp(firstName:str,lastName,email:str,role:str,empCode:str,ratePerHour:int):
+def insert_new_emp(firstName:str, lastName, email:str, role:str, empCode:str, ratePerHour:int, password:str):
     try:
         conn=get_connection()
         cursor=conn.cursor()
         cursor.execute("""
-        INSERT INTO Employees(firstName,lastName,email,role,empCode,ratePerHr) VALUES (?,?,?,?,?,?)
+        INSERT INTO Employees(firstName,lastName,email,role,empCode,ratePerHr,empPassword) VALUES (?,?,?,?,?,?,?)
         
-        """,(firstName,lastName,email,role,empCode,ratePerHour))
+        """, (firstName, lastName, email, role, empCode, ratePerHour, password))
         conn.commit()
         return "success"
 

@@ -3,6 +3,7 @@ from cProfile import label
 import streamlit as st
 import streamlit_authenticator as stauth
 import yaml
+from pyasn1_modules.rfc7292 import friendlyName
 from yaml.loader import SafeLoader
 import arrow
 from streamlit_autorefresh import st_autorefresh
@@ -79,7 +80,7 @@ try:
         if username == 'boris' and "CEO" in user_roles:
             st.subheader(f"Welcome **{st.session_state.get('name')}**")
             st.write(f"The current date and time is **{getWorkingTime(1)}**")
-            st.success(" your are logged in as a CEO 👨")
+            st.success(" our are logged in as a CEO 👨")
 
             tables_names = db.get_table_names()
             selected_table = st.selectbox("Select a table to view", tables_names)
@@ -163,13 +164,12 @@ try:
                                 st.rerun()
 
 
-
                             if len(new_project_name)>0 and len(project_description)>0 and len(client_info)>0 and project_budget!=0:
                                 st.success(f"Project {new_project_name} added successfully.")
                                 time.sleep(1.5)
                                 st.rerun()
                 elif choices=="Update Project Info":
-                        with st.form("update_project_form"):
+                        with st.form("update_project_form",clear_on_submit=True,enter_to_submit=True):
                             if len(project_names) == 0:
                                 st.warning("No projects found")
                                 update_submit_button_for_project = st.form_submit_button(f"Remove project ", type='primary')
@@ -227,37 +227,68 @@ try:
                         last_name_for_submission=st.text_input("Enter employee last name")
                         email=st.text_input("✉️ Enter employee email")
                         ratePerHour=st.number_input(" 💵 Hourly Rate (TWD)",min_value=0.0, max_value=1000.0,value=0.0,step=0.5,format="%.2f")
-                        emp_role=st.selectbox(label="Please select what role does this person have in the company", options=['CAD', 'Engineer','Admin','Management'])
+                        emp_role=st.selectbox(label="Please select what role does this person have in the company", options=["",'CAD', 'Engineer','Admin','Management'])
                         submittedEmp=st.form_submit_button(f"Add Employee ", type='primary')
 
 
-
                     if submittedEmp:
+                        result_for_emp_insertion=""
                         new_emp_number = generate_next_emp_number()
-                        if len(email)==0:
-                            safe_first = first_name_for_submission.lower().replace(" ", "")
-                            safe_last = last_name_for_submission.lower().replace(" ", "")
-                            email = f"{safe_first}.{safe_last}.{new_emp_number}@gmail.com"
 
-                        result_for_emp_insertion=db.insert_new_emp(first_name_for_submission, last_name_for_submission, email, emp_role,new_emp_number,ratePerHour)
-                        print(result_for_emp_insertion)
+                        if len(first_name_for_submission) == 0 and len(last_name_for_submission) == 0 and ratePerHour == 0 and len(emp_role) == 0:
+                            st.error("❌ Please fill in all required fields: first name, last name, hourly rate, and role.")
+
+
+                        if len(first_name_for_submission)==0:
+                            st.error("❌ Please type the **employee first name**")
+
+                        if len(last_name_for_submission) == 0:
+                            st.error("❌ Please type the **employee last name**")
+
+                        if ratePerHour == 0:
+                            st.error("❌ Please enter a valid **hourly rate**.")
+
+                        if len(emp_role) == 0:
+                            st.error("❌ Please select the employee's **role**.")
+
+
+                        else:
+                            if len(email) == 0:
+                                safe_first = first_name_for_submission.lower().replace(" ", "")
+                                safe_last = last_name_for_submission.lower().replace(" ", "")
+                                email = f"{safe_first}.{safe_last}.{new_emp_number}@gmail.com"
+
+                            result_for_emp_insertion = db.insert_new_emp(first_name_for_submission,
+                                                                         last_name_for_submission, email, emp_role,
+                                                                         new_emp_number, ratePerHour,new_emp_number)
+
+                            print(result_for_emp_insertion)
+
+
                         if "Integrity error: UNIQUE constraint failed: Employees.email" in result_for_emp_insertion:
 
                             st.error(f"**{email}** has been already been used please use another email")
                             time.sleep(0.5)
                             st.rerun()
-                        if "success"  in result_for_emp_insertion:
+                        if len(first_name_for_submission)>0 and len(last_name_for_submission)>0 and ratePerHour>0.00 and len(emp_role)>0:
                             st.success(f'Employee {first_name_for_submission} {last_name_for_submission} has been added successfully')
                             time.sleep(0.5)
                             st.rerun()
+
+
+
+
+
+
                 elif choices == "Update employee info":
-                    with st.form("update_employee_form"):
+
+                    if "form_success_update" not in st.session_state:
+                        st.session_state.form_success_update = False
+
+                    with st.form("update_employee_form",clear_on_submit=True,enter_to_submit=True):
                         if len(emp_names) == 0:
                             st.warning("No employees found")
                             update_submit_button = st.form_submit_button(f"Update Employee", type='primary')
-
-
-
 
 
                         else:
@@ -267,26 +298,37 @@ try:
                             updated_value=st.text_input("Please enter the new email/hourly rate **(example: 2.00)**")
                             update_submit_button = st.form_submit_button(f"Update Employee", type='primary')
 
-                        if update_submit_button and len(updated_value)>0:
-                            first_name,last_name=emp_to_update.split(" ")
-                            try:
-                                money=int(updated_value)
-                                print(db.update_emp_info(first_name,last_name,money))
+                        if update_submit_button:
+                            if len(emp_to_update)==0 and len(what_to_update)==0 and len(updated_value)==0:
+                                st.error("❌ Please fill in all required fields: Employee, what to update, value")
+                            if len(emp_to_update)==0:
+                                st.error("❌ Please Select the employee you want to update")
 
-                            except ValueError:
-                                email=updated_value
-                                db.update_emp_info(first_name, last_name, email)
-                            st.success(f"Employee {emp_to_update} been updated successfully")
-                        if update_submit_button and len(emp_to_update)==0:
-                            st.error("Please select a Employee name")
-                        if update_submit_button and len(what_to_update)==0:
-                            st.error("Please select what you want to update")
-                        if update_submit_button and len(updated_value)==0:
-                            st.error("Please type a value")
+                            if len(what_to_update)==0:
+                                st.error("❌ Please Select what you want to update")
+
+                            if len(updated_value)==0:
+                                st.error("❌ Please enter the value you want to update")
+
+                            else:
+                                first_name,last_name=emp_to_update.split(" ")
+                                try:
+                                    money=int(updated_value)
+                                    print(db.update_emp_info(first_name,last_name,money))
+
+                                except ValueError:
+                                    email=updated_value
+                                    db.update_emp_info(first_name, last_name, email)
+                                st.success(f"Employee {emp_to_update} has been updated successfully")
+                                time.sleep(1)
+                                st.rerun()
 
 
 
 
+
+        if st.button("Generate report", type="primary"):
+            st.switch_page("pages/reportPage.py")
 
         authenticator.logout()
 
