@@ -5,11 +5,13 @@ from duckdb.duckdb import cursor
 from matplotlib.backend_tools import cursors
 
 
-
 DB_NAME='OFFICE.db'
 
 def get_connection():
     return sqlite3.connect(DB_NAME,check_same_thread=False)
+
+
+
 
 
 def get_emp_ID(empCode:str):
@@ -163,15 +165,14 @@ def get_table_names():
     return tables
 
 
-def update():
-    print("")
 
-def add_project(productName:str,projectDescrption:str,clientName:str,productBudget:float):
+def add_project(productName:str,projectDescrption:str,clientName:str,productBudget:float,projectCode:str):
     try:
         conn = get_connection()
         cursor = conn.cursor()
         cursor.execute("""
-        INSERT INTO Projects(productName,projectDescription,clientName,projectBudget) VALUES (?,?,?,?)""",(productName,projectDescrption,clientName,productBudget))
+        INSERT INTO Projects(productName,projectDescription,clientName,projectBudget,projectCode) 
+        VALUES (?,?,?,?,?)""",(productName,projectDescrption,clientName,productBudget,projectCode))
         conn.commit()
         return "success"
 
@@ -181,6 +182,19 @@ def add_project(productName:str,projectDescrption:str,clientName:str,productBudg
         return f"Database error: {e}"
     finally:
         conn.close()
+
+
+def get_projects_code(project_name:str=""):
+    conn=get_connection()
+    cursor=conn.cursor()
+
+    cursor.execute("""
+        SELECT projectCode FROM Projects WHERE productName=?
+        """, (project_name,))
+    rows=cursor.fetchone()
+    conn.close()
+    return rows
+
 
 
 def remove_emp(name:str):
@@ -310,6 +324,10 @@ def update_project_info(projectName:str,choiceToUpdate:str,newValue:str):
             cursor.execute("""UPDATE Projects SET projectBudget=? WHERE projectID=?""", (money, projectID))
             conn.commit()
 
+        if choiceToUpdate=="Project Code":
+            cursor.execute("""
+            UPDATE Projects SET projectCode=? WHERE projectID=?
+            """,(newValue,projectID))
 
 
     except sqlite3.IntegrityError as e:
@@ -396,14 +414,6 @@ def convertDBToDataframe(tableName:str):
 
 
 
-
-user=get_emp_code()
-#get_emp_name_by_code()
-emp_list=[]
-for i in user:
-    first,last=get_emp_name_by_code(i)
-    codePlusName=f"{i}:{first}_{last}"
-    emp_list.append(codePlusName)
 
 
 

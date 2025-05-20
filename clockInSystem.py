@@ -83,17 +83,23 @@ if emp_code and emp_code != "":
         st.success("👋 Glad to see you're finishing work today.")
 
         try:
+            project_names=db.get_project_names()
+            project_code_plus_name_list = []
+            for project_name in project_names:
+                project_code=db.get_projects_code(project_name)
+                project_code_plus_name=f"{project_code[0]} :{project_name}"
+                project_code_plus_name_list.append(project_code_plus_name)
             project_name = st.selectbox(
                 "Enter the project name",
-                options=[""] + db.get_project_names(),
+                options=[""] +project_code_plus_name_list,
                 key="project_name_input"
             )
             if project_name:
-                project_id = db.get_project_id(project_name)[0]
+                print(project_name.split(":")[1])
+                project_id = db.get_project_id(project_name.split(":")[1])[0]
                 #print("project:", project_id)
-
                 clock_out = ui.button("Clock out/時鐘輸出", key='styled_btn_tailwind', class_name="bg-green-800 text-white")
-                password=st.text_input("please enter your employee passcode")
+                #password=st.text_input("please enter your employee passcode")
                 if clock_out:
                     end_time = getWorkingTime(0)
                     db.update_work_done(endTime=end_time, projectWorkOnID=project_id, empolyeeID=emp_id)

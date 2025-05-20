@@ -3,7 +3,6 @@ from cProfile import label
 import streamlit as st
 import streamlit_authenticator as stauth
 import yaml
-from pyasn1_modules.rfc7292 import friendlyName
 from yaml.loader import SafeLoader
 import arrow
 from streamlit_autorefresh import st_autorefresh
@@ -149,14 +148,32 @@ try:
                         project_description=st.text_input("Enter project description",key="project_desc_input")
                         client_info=st.text_input("Client name",key="client_info_input")
                         project_budget=st.number_input(" 💵 Project Budget (TWD)",min_value=0.0,value=0.0,step=0.5,format="%.2f")
+                        project_code=st.text_input("Please enter the project code")
                         submitted = st.form_submit_button("Submit project",type='primary')
 
                         if submitted:
                             result_for_project_insertion=""
                             if len(new_project_name)==0 and len(project_description)==0 and len(client_info)==0 and project_budget==0:
-                                st.error("Please type a project name, project description,client info, and project budget")
+                                st.error(
+                                    "❌ Please fill in all required fields: project name, client info,project budget and project code .")
+
+                            if len(new_project_name) == 0:
+                                st.error("❌ Please type the **Project Name**")
+
+                            if len(project_description) == 0:
+                                st.error("❌ Please type the **Project description**")
+
+                            if project_budget == 0:
+                                st.error("❌ Please enter a valid **budget**.")
+
+                            if len(project_code) == 0:
+                                st.error("❌ Please select the employee's **project code**.")
+
+
+
+
                             else:
-                                result_for_project_insertion=db.add_project(new_project_name,project_description,client_info,project_budget)
+                                result_for_project_insertion=db.add_project(new_project_name,project_description,client_info,project_budget,project_code)
 
                             if "Integrity error: UNIQUE constraint failed: Projects.productName" in result_for_project_insertion:
                                 st.error(f"Project **{new_project_name}** has been already been entered")
@@ -168,27 +185,48 @@ try:
                                 st.success(f"Project {new_project_name} added successfully.")
                                 time.sleep(1.5)
                                 st.rerun()
+
                 elif choices=="Update Project Info":
-                        with st.form("update_project_form",clear_on_submit=True,enter_to_submit=True):
+                        with st.form("update_project_form",enter_to_submit=True):
                             if len(project_names) == 0:
                                 st.warning("No projects found")
                                 update_submit_button_for_project = st.form_submit_button(f"Remove project ", type='primary')
                             else:
                                 project_to_update=st.selectbox("Please select the project you want to update",options=[""]+project_names)
-                                what_to_update_project = st.selectbox("Please select what you want to update", options=["","Project Name", "Client Name", "Project Description","Project Budget"])
-                                updated_value_project = st.text_input("Please enter the **new client** or **project name** or **project description**")
+                                what_to_update_project = st.selectbox("Please select what you want to update", options=["","Project Name", "Client Name", "Project Description","Project Budget","Project Code"])
+                                updated_value_project = st.text_input("Please enter the **new client** or **project name** or **project description** or **project budget** or **project code**")
                                 update_submit_button_for_project = st.form_submit_button(f"Update project ", type='primary')
 
-                        if update_submit_button_for_project and len(updated_value_project)>0 and len(what_to_update_project)>0:
-                            print(db.update_project_info(project_to_update,what_to_update_project,updated_value_project))
-                            st.success(f"Project {project_to_update} has been updated successfully")
+                                if update_submit_button_for_project:
+                                    if len(project_to_update)==0 and len(what_to_update_project)==0 and len(updated_value_project)==0:
+                                        st.error(
+                                            "❌ Please fill in all required fields: project to update, what category would like to update and the value .")
 
-                        if len(project_to_update) == 0:
-                            st.error("Please select a project name")
-                        if len(what_to_update_project) == 0:
-                            st.error("Please select what you what to update")
-                        if len(updated_value_project) == 0:
-                            st.error(f"Please type what is your new value for {what_to_update_project}")
+
+                                    if len(project_to_update)==0:
+                                        st.error("❌ Please select a project name")
+                                    if len(what_to_update_project)==0:
+                                        st.error("❌ Please select what category you want to update")
+
+                                    if len(updated_value_project)==0:
+                                        st.error("❌ Please enter a value ")
+
+                                    else:
+                                        print(db.update_project_info(project_to_update, what_to_update_project,
+                                                                     updated_value_project))
+
+
+                                    if len(project_to_update)>0 and len(what_to_update_project)>0 and len(updated_value_project)>0:
+                                        st.success(f"Project {project_to_update} has been updated successfully")
+                                        time.sleep(1.5)
+                                        st.rerun()
+
+
+
+
+
+
+
 
 
 
@@ -322,9 +360,6 @@ try:
                                 st.success(f"Employee {emp_to_update} has been updated successfully")
                                 time.sleep(1)
                                 st.rerun()
-
-
-
 
 
         if st.button("Generate report", type="primary"):
