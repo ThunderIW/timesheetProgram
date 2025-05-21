@@ -3,7 +3,7 @@ import arrow
 import polars as pl
 from duckdb.duckdb import cursor
 from matplotlib.backend_tools import cursors
-
+from pyreadline3.console.ansi import trtable
 
 DB_NAME='OFFICE.db'
 
@@ -332,6 +332,7 @@ def update_project_info(projectName:str,choiceToUpdate:str,newValue:str):
             cursor.execute("""
             UPDATE Projects SET projectCode=? WHERE projectID=?
             """,(newValue,projectID))
+            conn.commit()
 
 
     except sqlite3.IntegrityError as e:
@@ -430,8 +431,58 @@ def convertDBToDataframe(tableName:str):
     except sqlite3.Error as e:
         print(e)
 
+def get_people_who_worked_on_project(projectCode:str):
+    try:
+        conn=get_connection()
+        cursor=conn.cursor()
+        cursor.execute("""
+        SELECT DISTINCT firstName,lastName,empCode FROM HOURSWORKED H
+        JOIN Projects P ON P.projectID=H.projectWorkedONID
+        JOIN Employees E ON E.employeeID=H.employeeID
+        WHERE p.projectCode=?
+        
+        """,(projectCode,))
+        rows=cursor.fetchall()
+        conn.close()
+        return rows
+    except sqlite3.Error as e:
+        return f"Database error: {e}"
+
+def get_project_info(projectCode:str):
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+               SELECT  productName,projectDescription,clientName FROM HOURSWORKED H
+               JOIN Projects P ON P.projectID=H.projectWorkedONID
+               JOIN Employees E ON E.employeeID=H.employeeID
+               WHERE p.projectCode=?
+
+               """, (projectCode,))
+        rows = cursor.fetchone()
+        conn.close()
+        return rows
+    except sqlite3.Error as e:
+        return f"Database error: {e}"
 
 
 
-print(get_emp_password(6))
+def get_total_hours_worked_on_project(projectCode: str):
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+        SELECT SUM(totalHoursWorked) AS HOURS FROM HOURSWORKED H
+        JOIN Projects P ON P.projectID=H.projectWorkedONID
+        JOIN Employees E ON E.employeeID=H.employeeID
+        WHERE p.projectCode=?
+    
+        """, (projectCode,))
+        rows = cursor.fetchall()
+        conn.close()
+        return rows
+    except sqlite3.Error as e:
+        return f"Database error: {e}"
+
+
 

@@ -2,12 +2,12 @@ import streamlit as st
 
 import streamlit_authenticator as stauth
 import yaml
+from streamlit import title
 from yaml.loader import SafeLoader
 import streamlit_shadcn_ui as ui
 import databaseManagement as db
-
-
-
+from clockInSystem import emp_code
+import polars as pl
 
 
 def create_project_code_plus_name():
@@ -63,15 +63,49 @@ try:
 
             if view_project_btn and len(project_to_view)>0:
                 project_code=project_to_view.split(":")[0]
-                st.write(project_to_view)
-                st.write(project_code)
+                project_name=project_to_view.split(":")[1]
+                with st.expander(f"STATS about: **{project_code}  {project_name}**", expanded=True):
+
+                    people_who_worked_on_the_project=db.get_people_who_worked_on_project(project_code)
+                    total_hours_worked_project=db.get_total_hours_worked_on_project(project_code)[0][0]
+                    #project_info=db.get_project_info(project_code)
+
+
+                    if len(people_who_worked_on_the_project)>0 and  total_hours_worked_project!=0:
+                        first_name=[row[0] for row in people_who_worked_on_the_project]
+                        last_name = [row[1] for row in people_who_worked_on_the_project]
+                        empCode=[row[2] for row in people_who_worked_on_the_project]
+                        data={
+                            "first_name":first_name,
+                            "last_name":last_name,
+                            "empCode":empCode,
+                        }
+                        st.subheader("👨People who worked on the project")
+                        df=pl.DataFrame(data)
+                        st.dataframe(df, column_config={
+                        "first_name":"first name ",
+                        "last_name":"last name ",
+                        "empCode":"Employee Code",
+                        },use_container_width=True)
+                        if total_hours_worked_project<1 and total_hours_worked_project!=0:
+                            total_min_worked=round(total_hours_worked_project*60,1)
+                            st.metric(label="⌛ Minutes worked on the project  ",value=total_min_worked)
+                        else:
+                            st.metric(label="⌛ Hours worked on the project",value=total_hours_worked_project)
+
+                    else:
+                        st.warning("No project info or issue loading")
+
+
+
+
 
             if view_project_btn and len(project_to_view)==0:
                 st.error("❌ Please select the project you want to view")
                 #st.write(project_to_view)
 
 
-    if st.button("Go back to dashboard"):
+    if st.button("Go back to dashboard",type="primary"):
         st.switch_page("pages/Admin_page.py")
 
     authenticator.logout()
