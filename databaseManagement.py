@@ -486,3 +486,38 @@ def get_total_hours_worked_on_project(projectCode: str):
 
 
 
+def get_cost_per_project(projectCode: str):
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+        SELECT  sum((ratePerHr * totalHoursWorked)) as CostPerProject FROM HOURSWORKED H
+               JOIN Projects P ON P.projectID=H.projectWorkedONID
+               JOIN Employees E ON E.employeeID=H.employeeID
+               WHERE p.projectCode=?;
+        
+        """,(projectCode,))
+        rows = cursor.fetchone()
+        conn.close()
+        return rows[0]
+    except sqlite3.Error as e:
+        return f"Database error: {e}"
+
+def get_remaining_budget(projectCode:str):
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+        SELECT  projectBudget-sum((ratePerHr * totalHoursWorked)) as ReamainingBudget FROM HOURSWORKED H
+               JOIN Projects P ON P.projectID=H.projectWorkedONID
+               JOIN Employees E ON E.employeeID=H.employeeID
+               WHERE p.projectCode=?;
+        """,(projectCode,))
+        rows = cursor.fetchone()
+        conn.close()
+        return rows[0]
+    except sqlite3.Error as e:
+        return f"Database error: {e}"
+
+
+print(get_project_info("W02"))
