@@ -3,6 +3,7 @@ from cProfile import label
 import streamlit as st
 import streamlit_authenticator as stauth
 import yaml
+from duckdb.duckdb import project
 from yaml.loader import SafeLoader
 import arrow
 from streamlit_autorefresh import st_autorefresh
@@ -61,6 +62,14 @@ authenticator = stauth.Authenticate(
 
 
 
+def create_project_code_plus_name():
+    project_list = []
+    for project_name in db.get_project_names():
+        project_codes = db.get_projects_code(project_name)
+        project_combo = f"{project_codes[0]}: {project_name}"
+        project_list.append(project_combo)
+    return project_list
+
 
 
 
@@ -79,7 +88,7 @@ try:
         if username == 'boris' and "CEO" in user_roles:
             st.subheader(f"Welcome **{st.session_state.get('name')}**")
             st.write(f"The current date and time is **{getWorkingTime(1)}**")
-            st.success(" our are logged in as a CEO 👨")
+            st.success("you are logged in as a CEO 👨")
 
             tables_names = db.get_table_names()
             selected_table = st.selectbox("Select a table to view", tables_names)
@@ -111,7 +120,7 @@ try:
             st.markdown("---")
             st.subheader("💼 Management")
 
-            with st.expander("➕➖ Add or remove  New Project"):
+            with st.expander("➕➖ Add remove Update Projects"):
                 choices=st.segmented_control("Select an process you would like to do",options=['Add a new Project','Remove an Project',"Update Project Info"],default="Add a new Project")
 
 
@@ -124,13 +133,14 @@ try:
                             submitted = st.form_submit_button(f"Remove project ", type='primary')
 
                         else:
-                            project_to_remove=st.selectbox("Enter the name the name of the project you want to remove",options=[""]+project_names,key="selected_project_to_remove")
+                            project_to_remove=st.selectbox("Enter the name the name of the project you want to remove",options=[""]+create_project_code_plus_name(),key="selected_project_to_remove")
                             #new_project_name = st.text_input("Enter the project name you want to remove")
                             submitted = st.form_submit_button(f"Remove project ", type='primary')
 
                     if submitted and len(project_to_remove)>0:
-                        print(project_to_remove)
-                        db.delete_Project_or_delete_emp(project_to_remove, mode=0)
+                        project_code=str(project_to_remove).split(":")[0]
+
+                        db.delete_Project_or_delete_emp(projectCode=project_code, mode=0)
                         st.success(f"{project_to_remove} has been removed successfully.")
                         time.sleep(1)
                         st.rerun()
@@ -152,39 +162,50 @@ try:
                         submitted = st.form_submit_button("Submit project",type='primary')
 
                         if submitted:
-                            result_for_project_insertion=""
+                            is_valid = True
+
                             if len(new_project_name)==0 and len(project_description)==0 and len(client_info)==0 and project_budget==0:
                                 st.error(
                                     "❌ Please fill in all required fields: project name, client info,project budget and project code .")
-
-                            if len(new_project_name) == 0:
-                                st.error("❌ Please type the **Project Name**")
-
-                            if len(project_description) == 0:
-                                st.error("❌ Please type the **Project description**")
-
-                            if project_budget == 0:
-                                st.error("❌ Please enter a valid **budget**.")
-
-                            if len(project_code) == 0:
-                                st.error("❌ Please select the employee's **project code**.")
-
-
-
-
+                                is_valid=False
                             else:
+                                if len(new_project_name) == 0:
+                                    st.error("❌ Please type the **Project Name**")
+                                    is_valid=False
+
+                                if len(project_description) == 0:
+                                    st.error("❌ Please type the **Project description**")
+                                    is_valid=False
+
+                                if project_budget == 0:
+                                    st.error("❌ Please enter a valid **budget**.")
+                                    is_valid=False
+
+                                if len(project_code) == 0:
+                                    st.error("❌ Please enter the project's **project code**.")
+                                    is_valid=False
+
+                                if len(client_info) == 0:
+                                    st.error("❌ Please Type the **client name**.")
+                                    is_valid = False
+
+
+                            if is_valid:
                                 result_for_project_insertion=db.add_project(new_project_name,project_description,client_info,project_budget,project_code)
+                                print(result_for_project_insertion)
+                                if "Integrity error: UNIQUE constraint failed: Projects.productName" in result_for_project_insertion:
+                                    st.error(f"Project **{new_project_name}** has been already been entered")
+                                    time.sleep(1.5)
+                                    st.rerun()
 
-                            if "Integrity error: UNIQUE constraint failed: Projects.productName" in result_for_project_insertion:
-                                st.error(f"Project **{new_project_name}** has been already been entered")
-                                time.sleep(1.5)
-                                st.rerun()
+                                if "Integrity error: UNIQUE constraint failed: Projects.projectCode" in result_for_project_insertion:
+                                    st.error(f"Project code **{project_code}** has been already used, please use another project code")
 
 
-                            if len(new_project_name)>0 and len(project_description)>0 and len(client_info)>0 and project_budget!=0:
-                                st.success(f"Project {new_project_name} added successfully.")
-                                time.sleep(1.5)
-                                st.rerun()
+                                else:
+                                    st.success(f"Project {new_project_name} added successfully.")
+                                    time.sleep(1.5)
+                                    st.rerun()
 
                 elif choices=="Update Project Info":
                         with st.form("update_project_form",enter_to_submit=True):
@@ -270,27 +291,34 @@ try:
 
 
                     if submittedEmp:
-                        result_for_emp_insertion=""
+                        is_valid_emp_input=True
                         new_emp_number = generate_next_emp_number()
 
                         if len(first_name_for_submission) == 0 and len(last_name_for_submission) == 0 and ratePerHour == 0 and len(emp_role) == 0:
                             st.error("❌ Please fill in all required fields: first name, last name, hourly rate, and role.")
-
-
-                        if len(first_name_for_submission)==0:
-                            st.error("❌ Please type the **employee first name**")
-
-                        if len(last_name_for_submission) == 0:
-                            st.error("❌ Please type the **employee last name**")
-
-                        if ratePerHour == 0:
-                            st.error("❌ Please enter a valid **hourly rate**.")
-
-                        if len(emp_role) == 0:
-                            st.error("❌ Please select the employee's **role**.")
-
+                            is_valid_emp_input=False
 
                         else:
+
+
+                            if len(first_name_for_submission)==0:
+                                st.error("❌ Please type the **employee first name**")
+                                is_valid_emp_input=False
+
+                            if len(last_name_for_submission) == 0:
+                                st.error("❌ Please type the **employee last name**")
+                                is_valid_emp_input=False
+
+                            if ratePerHour == 0:
+                                st.error("❌ Please enter a valid **hourly rate**.")
+                                is_valid_emp_input=False
+
+                            if len(emp_role) == 0:
+                                st.error("❌ Please select the employee's **role**.")
+                                is_valid_emp_input=False
+
+
+                        if is_valid_emp_input:
                             if len(email) == 0:
                                 safe_first = first_name_for_submission.lower().replace(" ", "")
                                 safe_last = last_name_for_submission.lower().replace(" ", "")
@@ -300,18 +328,19 @@ try:
                                                                          last_name_for_submission, email, emp_role,
                                                                          new_emp_number, ratePerHour,new_emp_number)
 
-                            print(result_for_emp_insertion)
 
 
-                        if "Integrity error: UNIQUE constraint failed: Employees.email" in result_for_emp_insertion:
 
-                            st.error(f"**{email}** has been already been used please use another email")
-                            time.sleep(0.5)
-                            st.rerun()
-                        if len(first_name_for_submission)>0 and len(last_name_for_submission)>0 and ratePerHour>0.00 and len(emp_role)>0:
-                            st.success(f'Employee {first_name_for_submission} {last_name_for_submission} has been added successfully')
-                            time.sleep(0.5)
-                            st.rerun()
+                            if "Integrity error: UNIQUE constraint failed: Employees.email" in result_for_emp_insertion:
+
+                                st.error(f"**{email}** has been already been used please use another email")
+                                time.sleep(0.5)
+                                st.rerun()
+
+                            else:
+                                st.success(f'Employee {first_name_for_submission} {last_name_for_submission} has been added successfully')
+                                time.sleep(0.5)
+                                st.rerun()
 
 
 

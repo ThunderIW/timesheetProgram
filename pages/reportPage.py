@@ -1,27 +1,70 @@
+import time
+
 import streamlit as st
 
 import streamlit_authenticator as stauth
 import yaml
-from streamlit import title
+from sqlglot import column
+from streamlit import title, image
 from yaml.loader import SafeLoader
 import streamlit_shadcn_ui as ui
 import databaseManagement as db
 from clockInSystem import emp_code
 import polars as pl
 import arrow
+from pygwalker.api.streamlit import  StreamlitRenderer
+import plotly.graph_objects as go
+bar_width=0.2
+
+
+def create_final_project_df():
+    projects=db.retrieve_full_report(mode="Projects")
+    columns=[
+        "Project Code",
+        "Project Name",
+        "Project Description",
+        "Project Budget(TWD)",
+        "Project Remaining budget(TWD)",
+        "Total Hours",
+        "Total Cost Per Project(TWD)"
+
+    ]
+    final_project_report=pl.DataFrame(projects,schema=columns,orient='row')
+    return final_project_report
+
+
+def create_final_report_df():
+    # 1. If retrieve_full_report() returns a list of dicts:
+    report = db.retrieve_full_report(mode="all")
+
+    columns = [
+        "Project Code",
+        "product Name",
+        "employee Code",
+        "first Name",
+        "last Name",
+        "rate Per Hour(TWD)",
+        "total Hours  Worked",
+        "project Budget(TWD)",
+        "Cost(TWD)"
+    ]
+
+    # Build DataFrame
+    final_report_df = pl.DataFrame(report,schema=columns,orient="row")
+    return final_report_df
+    #final_report_df.write_csv("timesheet_report.csv")
+
 
 
 
 
 def create_project_code_plus_name():
-    project_list=[]
-
+    project_list = []
     for project_name in db.get_project_names():
-        project_codes=db.get_projects_code(project_name)
-        project_combo=f"{project_codes[0]}: {project_name}"
+        project_codes = db.get_projects_code(project_name)
+        project_combo = f"{project_codes[0]}: {project_name}"
         project_list.append(project_combo)
     return project_list
-
 
 def getWorkingTime(type: int):
     correctedFormat = ""
@@ -35,12 +78,8 @@ def getWorkingTime(type: int):
         correctedFormat = local.format(dateFormat)
     return correctedFormat
 
-
-
-
 with open('config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
-
 
 stauth.Hasher.hash_passwords(config['credentials'])
 
@@ -51,128 +90,187 @@ authenticator = stauth.Authenticate(
     config['cookie']['expiry_days']
 )
 
-
-
-
-
-
-
-
 st.image("wieconLogo.png")
-roles = st.session_state.get("roles", [])  # ✅ Safely fetch roles or default to empty list
+roles = st.session_state.get("roles", [])  # Safe fetch
 st.title("Report Page")
-
-
-
-
-
 
 try:
     if "CEO" in roles:
         st.success("ACCESS GRANTED")
-        if len(create_project_code_plus_name())==0:
+        project_list = create_project_code_plus_name()
+        if len(project_list) == 0:
             st.warning("No project or issue loading")
-        if len (create_project_code_plus_name())>0:
+        else:
+            project_to_view = st.selectbox("Please select the project you want to view", options=[""] + project_list)
+            view_project_btn = ui.button("View project", key='styled_btn_tailwind', class_name="bg-green-800 text-white")
 
-            project_to_view=st.selectbox("Please select the project you want to view",options=[""]+create_project_code_plus_name())
+            if view_project_btn:
+                if len(project_to_view) == 0:
+                    st.error("❌ Please select the project you want to view")
+                else:
+                    project_code = project_to_view.split(":")[0]
+                    project_name = project_to_view.split(":")[1]
 
-            view_project_btn=ui.button("View project", key='styled_btn_tailwind', class_name="bg-green-800 text-white")
+                    # Load all project data
+                    people_who_worked = db.get_people_who_worked_on_project(project_code)
+                    total_hours = db.get_total_hours_worked_on_project(project_code)
+                    total_hours = total_hours[0][0] if total_hours and total_hours[0] else 0
+                    cost = db.get_cost_per_project(project_code)
+                    remaining_budget = db.get_remaining_budget(project_code)
+                    project_info = db.get_project_info(project_code)
+                    Pn, Pd, Pc = project_info if project_info and len(project_info) == 3 else ("N/A", "N/A", "N/A")
 
-            if view_project_btn and len(project_to_view)>0:
-                project_code=project_to_view.split(":")[0]
-                project_name=project_to_view.split(":")[1]
-                with st.expander(f"STATS about: **{project_code}  {project_name}** as of **{getWorkingTime(1)}**", expanded=True):
-
-                    people_who_worked_on_the_project=db.get_people_who_worked_on_project(project_code)
-                    total_hours_worked_project=db.get_total_hours_worked_on_project(project_code)[0][0]
-                    cost_per_project=db.get_cost_per_project(project_code)
-                    costs_remaining_budget=db.get_remaining_budget(project_code)
-                    Pn,Pd,Pc=db.get_project_info(project_code)
-
-
-                    if len(people_who_worked_on_the_project)>0 and  total_hours_worked_project!=0:
-                        first_name=[row[0] for row in people_who_worked_on_the_project]
-                        last_name = [row[1] for row in people_who_worked_on_the_project]
-                        empCode=[row[2] for row in people_who_worked_on_the_project]
-                        data={
-                            "first_name":first_name,
-                            "last_name":last_name,
-                            "empCode":empCode,
-                        }
-                        st.subheader("General info on project")
-                        st.write(f"**Project name**: {Pn}")
-                        st.write(f"**Project description**: {Pd}")
-                        st.write(f"**Project client**: {Pc}")
-
-                        st.subheader("👨People who worked on the project")
-                        df=pl.DataFrame(data)
-                        st.dataframe(df, column_config={
-                        "first_name":"first name ",
-                        "last_name":"last name ",
-                        "empCode":"Employee Code",
-                        },use_container_width=True)
-
-                        st.subheader("💵 COST info")
-                        col1,col2=st.columns(2,gap="small",border=True)
-                        with col1:
-                            st.markdown("""
-                                   <div style="background-color:#e6f7ff; padding:20px; border-radius:10px;">
-                               """, unsafe_allow_html=True)
-                            st.metric(label=f"💵 Cost of project **(TWD)** {project_code}:{project_name}", value=cost_per_project,delta=costs_remaining_budget)
-                        #st.write(cost_per_project)
-                        with col2:
-                            st.markdown("""
-                                    <div style="background-color:#f9f0ff; padding:20px; border-radius:10px;">
-                                """, unsafe_allow_html=True)
-
-                            if total_hours_worked_project<1 and total_hours_worked_project!=0:
-                                total_min_worked=round(total_hours_worked_project*60,1)
-                                st.metric(label="⌛ Minutes worked on the project  ",value=total_min_worked)
-                            else:
-                                st.metric(label="⌛ Hours worked on the project",value=total_hours_worked_project)
-
-                        data_df=pl.DataFrame({
-                            "project code":project_code,
-                            "project name":project_name,
-                            "total hours worked project":total_hours_worked_project,
-                            "cost of project":cost_per_project,
-                            "remaining_budget":costs_remaining_budget
-                            })
-                        data_as_csv=data_df.write_csv(None)
-                        st.download_button(label="Download report",data=data_as_csv,file_name="project_data.csv",mime="text/csv", icon=":material/download:")
-
-
-
+                    # Check if any project info is missing
+                    if not people_who_worked or total_hours == 0 or cost == 0 or remaining_budget == 0 or Pn == "N/A":
+                        st.warning("No data available")
                     else:
-                        st.warning("No project info or issue loading")
+                        with st.expander(
+                            f"STATS about: **{project_code}  {project_name}** as of **{getWorkingTime(1)}**",
+                            expanded=True
+                        ):
+                            # General info
+                            st.subheader("General info on project")
+                            st.write(f"**Project name**: {Pn}")
+                            st.write(f"**Project description**: {Pd}")
+                            st.write(f"**Project client**: {Pc}")
+
+                            # People table
+                            st.subheader("👨 People who worked on the project")
+                            data = {
+                                "first_name": [row[0] for row in people_who_worked],
+                                "last_name": [row[1] for row in people_who_worked],
+                                "empCode": [row[2] for row in people_who_worked],
+                            }
+                            df = pl.DataFrame(data)
+                            st.dataframe(
+                                df,
+                                column_config={
+                                    "first_name": "first name ",
+                                    "last_name": "last name ",
+                                    "empCode": "Employee Code",
+                                },
+                                use_container_width=True
+                            )
+
+                            # Cost info
+                            st.subheader("💵 COST info and ⌛ Total  Project Hours")
+                            col1, col2 = st.columns(2, gap="small", border=True)
+                            with col1:
+                                st.markdown(
+                                    """
+                                    <div style="background-color:#e6f7ff; padding:20px; border-radius:10px;">
+                                    """,
+                                    unsafe_allow_html=True
+                                )
+                                st.metric(
+                                    label=f"💵 Cost of project **(TWD)** {project_code}:{project_name}",
+                                    value=cost,
+                                    delta=remaining_budget
+                                )
+                            with col2:
+                                st.markdown(
+                                    """
+                                    <div style="background-color:#f9f0ff; padding:20px; border-radius:10px;">
+                                    """,
+                                    unsafe_allow_html=True
+                                )
+                                if total_hours < 1 and total_hours != 0:
+                                    total_min_worked = round(total_hours * 60, 1)
+                                    st.metric(label="⌛ Minutes worked on the project", value=total_min_worked)
+                                else:
+                                    st.metric(label="⌛ Hours worked on the project", value=total_hours)
+
+                            # Download CSV
+                            """
+                            data_df = pl.DataFrame({
+                                "project code": [project_code],
+                                "project name": [project_name],
+                                "total hours worked project": [total_hours],
+                                "cost of project": [cost],
+                                "remaining_budget": [remaining_budget]
+                            })
+                            
+                            data_as_csv = data_df.write_csv(None)
+                            st.download_button(
+                                label="Download report",
+                                data=data_as_csv,
+                                file_name="project_data.csv",
+                                mime="text/csv",
+                                icon=":material/download:"
+                            )
+                            """
+
+    if st.button("See project reports"):
+        with st.expander(label=f"Summary as **{getWorkingTime(1)}**"):
+            st.subheader("Overall")
+            st.dataframe(create_final_report_df(),use_container_width=True)
+            st.download_button(
+                label="Download report",
+                data=create_final_project_df().write_csv(None),
+                file_name="project_data.csv",
+                mime="text/csv",
+                icon=":material/download:",key="All_download"
+            )
+
+            st.subheader("Individual projects")
+            st.dataframe(create_final_project_df(),use_container_width=True)
+            selected =create_final_project_df().select(["Project Code","Project Name","Project Budget(TWD)","Project Remaining budget(TWD)"])
+            pdf=selected.to_pandas()
+
+            fig=go.Figure(data=[go.Bar(
+                name="Project budget",
+                x=pdf['Project Name'],
+                y=pdf['Project Budget(TWD)'],
+
+                marker_color="#3498DB",
+                width=bar_width
+            ),
+            go.Bar(
+                name="Remaining budget",
+                x=pdf['Project Name'],
+                y=pdf['Project Remaining budget(TWD)'],
+
+                marker_color="#FF5733",
+                width=bar_width,
+
+
+            ),
+            ])
+            fig.update_layout(
+                barmode='group',
+                title="Project Budget vs Remaining Budget (TWD)",
+                xaxis_title="Project Name",
+                yaxis_title="Amount (TWD)",
+                legend_title="Budget Portion",
+                
+            )
+
+
+            st.plotly_chart(fig, use_container_width=True)
 
 
 
+            st.download_button(
+                label="Download report",
+                data=create_final_project_df().write_csv(None),
+                file_name="project_data.csv",
+                mime="text/csv",
+                icon=":material/download:",key="P_download"
+            )
 
 
-            if view_project_btn and len(project_to_view)==0:
-                st.error("❌ Please select the project you want to view")
-                #st.write(project_to_view)
-
-
-    if st.button("Go back to dashboard",type="primary"):
+    if st.button("Go back to dashboard", type="primary"):
         st.switch_page("pages/Admin_page.py")
 
     authenticator.logout()
     if st.session_state.get("authentication_status") is None:
         st.switch_page("clockInSystem.py")
 
-
-
 except TypeError as e:
-    error_message=str(e)
-    print(error_message)
+    error_message = str(e)
     if "NoneType" in error_message:
         st.error("❌ Access denied. You are not authorized to view this page.")
-        if st.button("Login",type="secondary"):
+        if st.button("Login", type="secondary"):
             st.switch_page("pages/Admin_page.py")
-        if st.button("Go Back",type="primary",):
+        if st.button("Go Back", type="primary"):
             st.switch_page("clockInSystem.py")
-
-
-

@@ -225,17 +225,18 @@ def get_employees():
 
 
 
-def delete_Project_or_delete_emp(projectName:str="",emp_first_name:str="",emp_last_name:str="",mode:int=0):
+def delete_Project_or_delete_emp(projectCode:str="",emp_first_name:str="",emp_last_name:str="",mode:int=0):
     try:
         conn=get_connection()
+        conn.execute("PRAGMA foreign_keys = ON")
         cursor = conn.cursor()
 
         if mode==0:
 
             cursor.execute(
             """
-                DELETE FROM Projects WHERE productName=?
-            """,(projectName,)
+                DELETE FROM Projects WHERE projectCode =?
+            """,(projectCode,)
             )
 
         if mode==1:
@@ -520,4 +521,67 @@ def get_remaining_budget(projectCode:str):
         return f"Database error: {e}"
 
 
-print(get_project_info("W02"))
+def retrieve_full_report(mode):
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        if mode == "all":
+            cursor.execute("""
+        SELECT
+    p.projectCode,
+    P.productName,
+    E.empCode,
+    E.firstName,
+    E.lastName,
+    E.ratePerHr,
+    SUM(H.totalHoursWorked) AS totalHoursWorked,
+    P.projectBudget,
+    SUM(E.ratePerHr * H.totalHoursWorked) AS totalCost
+FROM
+    HOURSWORKED H
+    JOIN Projects P ON P.projectID = H.projectWorkedONID
+    JOIN Employees E ON E.employeeID = H.employeeID
+GROUP BY
+    P.productName,
+    E.empCode,
+    E.firstName,
+    E.lastName,
+    E.ratePerHr,
+    P.projectBudget
+        
+        """)
+            rows = cursor.fetchall()
+            conn.close()
+            return rows
+
+        if mode=="Projects":
+            cursor.execute("""
+            SELECT
+    P.projectCode,
+    P.productName,
+    P.projectDescription,
+    P.projectBudget,
+    P.projectBudget - SUM(E.ratePerHr * H.totalHoursWorked) AS remainingBudget,
+    SUM(H.totalHoursWorked) AS totalHoursWorked,
+    SUM(E.ratePerHr * H.totalHoursWorked) AS totalCost
+FROM
+    HOURSWORKED H
+    JOIN Projects P ON P.projectID = H.projectWorkedONID
+    JOIN Employees E ON E.employeeID = H.employeeID
+GROUP BY
+    P.projectCode,
+    P.productName,
+    P.projectBudget
+            
+   
+            
+            """)
+
+            rows = cursor.fetchall()
+            conn.close()
+            return rows
+    except sqlite3.Error as e:
+        return f"Database error: {e}"
+
+
+
