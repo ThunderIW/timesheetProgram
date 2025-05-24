@@ -84,7 +84,7 @@ try:
         username = st.session_state.get('username')
         user_info = config['credentials']['usernames'].get(username, {})
         user_roles = user_info.get('roles', [])
-        st.title("👩‍💼💻🔑 admin Page")
+        st.title("👩‍💼💻🔑 Admin Page")
         if username == 'boris' and "CEO" in user_roles:
             st.subheader(f"Welcome **{st.session_state.get('name')}**")
             st.write(f"The current date and time is **{getWorkingTime(1)}**")

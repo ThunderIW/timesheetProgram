@@ -1,4 +1,5 @@
 import time
+from cProfile import label
 
 import streamlit as st
 
@@ -119,6 +120,8 @@ try:
                     remaining_budget = db.get_remaining_budget(project_code)
                     project_info = db.get_project_info(project_code)
                     Pn, Pd, Pc = project_info if project_info and len(project_info) == 3 else ("N/A", "N/A", "N/A")
+                    Engineer_work_hours=db.get_CAD_and_engineer_hours(project_code,"Engineer")
+                    CAD_Work_hours=db.get_CAD_and_engineer_hours(project_code,"CAD")
 
                     # Check if any project info is missing
                     if not people_who_worked or total_hours == 0 or cost == 0 or remaining_budget == 0 or Pn == "N/A":
@@ -153,8 +156,36 @@ try:
                             )
 
                             # Cost info
+                            st.subheader("Split of Engineer and CAD Hours")
+                            col1C,col2C=st.columns(2,gap="small",border=True)
+                            with col1C:
+                                st.markdown(
+                                    """
+                                    <div style="background-color:#e6f7ff; padding:20px; border-radius:10px;">
+                                    """,
+                                    unsafe_allow_html=True
+                                )
+                                if Engineer_work_hours>=1:
+                                    st.metric(label="⌛Engineer Hours",value=Engineer_work_hours)
+                                else:
+                                    st.metric(label="⌛ Engineer Hours",value=0)
+
+                            with col2C:
+                                st.markdown(
+                                    """
+                                    <div style="background-color:#e6f7ff; padding:20px; border-radius:10px;">
+                                    """,
+                                    unsafe_allow_html=True
+                                )
+                                if CAD_Work_hours>=1:
+                                    st.metric(label="⌛ CAD Hours",value=CAD_Work_hours)
+                                else:
+                                    st.metric(label="⌛ CAD Hours",value=0)
+
+
+
                             st.subheader("💵 COST info and ⌛ Total  Project Hours")
-                            col1, col2 = st.columns(2, gap="small", border=True)
+                            col1, col2,col3 = st.columns(3, gap="small", border=True)
                             with col1:
                                 st.markdown(
                                     """
@@ -164,8 +195,8 @@ try:
                                 )
                                 st.metric(
                                     label=f"💵 Cost of project **(TWD)** {project_code}:{project_name}",
-                                    value=cost,
-                                    delta=remaining_budget
+                                    value=cost
+
                                 )
                             with col2:
                                 st.markdown(
@@ -176,29 +207,21 @@ try:
                                 )
                                 if total_hours < 1 and total_hours != 0:
                                     total_min_worked = round(total_hours * 60, 1)
-                                    st.metric(label="⌛ Minutes worked on the project", value=total_min_worked)
+                                    st.metric(label="⌛ Hours worked on the project", value=0)
                                 else:
                                     st.metric(label="⌛ Hours worked on the project", value=total_hours)
 
+                            with col3:
+                                st.markdown(
+                                    """
+                                    <div style="background-color:#e6f7ff; padding:20px; border-radius:10px;">
+                                    """,
+                                    unsafe_allow_html=True
+                                )
+
+                                st.metric(label="💵 Remaining Budget", value=round(remaining_budget))
                             # Download CSV
-                            """
-                            data_df = pl.DataFrame({
-                                "project code": [project_code],
-                                "project name": [project_name],
-                                "total hours worked project": [total_hours],
-                                "cost of project": [cost],
-                                "remaining_budget": [remaining_budget]
-                            })
-                            
-                            data_as_csv = data_df.write_csv(None)
-                            st.download_button(
-                                label="Download report",
-                                data=data_as_csv,
-                                file_name="project_data.csv",
-                                mime="text/csv",
-                                icon=":material/download:"
-                            )
-                            """
+
 
     if st.button("See project reports"):
         with st.expander(label=f"Summary as **{getWorkingTime(1)}**"):
@@ -214,8 +237,16 @@ try:
 
             st.subheader("Individual projects")
             st.dataframe(create_final_project_df(),use_container_width=True)
-            selected =create_final_project_df().select(["Project Code","Project Name","Project Budget(TWD)","Project Remaining budget(TWD)"])
+            selected =create_final_project_df().select(["Project Code","Project Name","Project Budget(TWD)","Project Remaining budget(TWD)","Total Cost Per Project(TWD)"])
             pdf=selected.to_pandas()
+
+            st.download_button(
+                label="Download report",
+                data=create_final_project_df().write_csv(None),
+                file_name="project_data.csv",
+                mime="text/csv",
+                icon=":material/download:", key="P_download"
+            )
 
             fig=go.Figure(data=[go.Bar(
                 name="Project budget",
@@ -226,15 +257,24 @@ try:
                 width=bar_width
             ),
             go.Bar(
-                name="Remaining budget",
+                name="Remaining budget(TWD)",
                 x=pdf['Project Name'],
                 y=pdf['Project Remaining budget(TWD)'],
-
                 marker_color="#FF5733",
                 width=bar_width,
 
 
             ),
+            go.Bar(
+                name="Total Cost per project(TWD)",
+                x=pdf['Project Name'],
+                y=pdf['Total Cost Per Project(TWD)'],
+                marker_color="#2ECC71",
+                width=bar_width,
+            )
+
+
+
             ])
             fig.update_layout(
                 barmode='group',
@@ -250,13 +290,7 @@ try:
 
 
 
-            st.download_button(
-                label="Download report",
-                data=create_final_project_df().write_csv(None),
-                file_name="project_data.csv",
-                mime="text/csv",
-                icon=":material/download:",key="P_download"
-            )
+
 
 
     if st.button("Go back to dashboard", type="primary"):
@@ -272,5 +306,5 @@ except TypeError as e:
         st.error("❌ Access denied. You are not authorized to view this page.")
         if st.button("Login", type="secondary"):
             st.switch_page("pages/Admin_page.py")
-        if st.button("Go Back", type="primary"):
+        if st.button("Return to Home", type="primary"):
             st.switch_page("clockInSystem.py")

@@ -68,7 +68,7 @@ st.title('Wiecon Time Management System')
 
 # ✅ Selectbox for employee code (with blank option for reset)
 emp_code = st.selectbox(
-    "Select your employee number (選擇您的員工號碼)",
+    "Employee number",
     options=[""] + emp_list,
     key="emp_code_input"
 )

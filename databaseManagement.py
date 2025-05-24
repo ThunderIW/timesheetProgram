@@ -583,5 +583,46 @@ GROUP BY
     except sqlite3.Error as e:
         return f"Database error: {e}"
 
+def get_CAD_and_engineer_hours(projectCode:str,retrieve:str):
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        if retrieve=="CAD":
+            cursor.execute("""
+            SELECT
+            SUM(H.totalHoursWorked) AS TOTALHOURS
+            FROM HOURSWORKED H
+            JOIN Projects P ON P.projectID = H.projectWorkedONID
+            JOIN Employees E ON E.employeeID = H.employeeID
+            WHERE E.Role='Engineer';
+            """)
+            rows = cursor.fetchone()
+            conn.close()
+            return rows[0]
+        if retrieve=="Engineer":
+            cursor.execute("""
+            SELECT
+            SUM(H.totalHoursWorked) AS TOTALHOURS
+            FROM HOURSWORKED H
+            JOIN Projects P ON P.projectID = H.projectWorkedONID
+            JOIN Employees E ON E.employeeID = H.employeeID
+            WHERE E.Role='CAD';
+            """)
+            rows = cursor.fetchone()
+            conn.close()
+            return rows[0]
+    except sqlite3.Error as e:
+        return f"Database error: {e}"
+
+
+
+
+
+
+
+
+
+
 
 

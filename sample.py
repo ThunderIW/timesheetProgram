@@ -65,6 +65,7 @@ def modify_excel_file(excel_file:str):
 
 #create_CSV_And_Excel()
 
+print(0.02<0)
 
 
 
