@@ -5,15 +5,11 @@ import streamlit as st
 
 import streamlit_authenticator as stauth
 import yaml
-from sqlglot import column
-from streamlit import title, image
 from yaml.loader import SafeLoader
 import streamlit_shadcn_ui as ui
 import databaseManagement as db
-from clockInSystem import emp_code
 import polars as pl
 import arrow
-from pygwalker.api.streamlit import  StreamlitRenderer
 import plotly.graph_objects as go
 bar_width=0.2
 
@@ -53,7 +49,6 @@ def create_final_report_df():
     # Build DataFrame
     final_report_df = pl.DataFrame(report,schema=columns,orient="row")
     return final_report_df
-    #final_report_df.write_csv("timesheet_report.csv")
 
 
 

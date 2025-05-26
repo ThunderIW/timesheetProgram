@@ -1,9 +1,6 @@
 import sqlite3
 import arrow
 import polars as pl
-from duckdb.duckdb import cursor
-from matplotlib.backend_tools import cursors
-from pyreadline3.console.ansi import trtable
 
 DB_NAME='OFFICE.db'
 
