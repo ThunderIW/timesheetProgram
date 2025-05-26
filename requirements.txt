@@ -6,4 +6,4 @@ polars~=1.29.0
 plotly~=6.1.0
 streamlit-shadcn-ui
 streamlit-authenticator
-
+streamlit_autorefresh
