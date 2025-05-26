@@ -5,4 +5,5 @@ pygwalker~=0.4.9.15
 polars~=1.29.0
 plotly~=6.1.0
 streamlit-shadcn-ui
+streamlit-authenticator
 
