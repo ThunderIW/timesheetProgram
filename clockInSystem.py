@@ -5,11 +5,6 @@ import arrow
 import streamlit_shadcn_ui as ui
 
 
-
-
-
-
-
 # Initialize session state keys safely
 if "clocked_in_user" not in st.session_state:
     st.session_state["clocked_in_user"] = []

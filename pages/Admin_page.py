@@ -1,16 +1,18 @@
 from cProfile import label
+from pydoc import classname
 
+import pandas as pd
 import streamlit as st
 import streamlit_authenticator as stauth
 import yaml
-from duckdb.duckdb import project
 from yaml.loader import SafeLoader
 import arrow
 from streamlit_autorefresh import st_autorefresh
 import databaseManagement as db
-import streamlit_shadcn_ui as u
+import streamlit_shadcn_ui as ui
 import pygwalker as pyg
 import time
+import polars as pl
 
 
 
@@ -101,6 +103,12 @@ try:
             else:
                 st.dataframe(data=project_df, use_container_width=True)
                 current_count = len(project_df)
+                psd=project_df.write_csv()
+
+
+
+                st.download_button(label=f"📥 Download {selected_table} to csv ",data=psd,file_name=f'{str(selected_table).lower().capitalize()}.csv',mime='text/csv',type="primary")
+
 
 
             if "last_updated" not in st.session_state:
@@ -159,7 +167,7 @@ try:
                         client_info=st.text_input("Client name",key="client_info_input")
                         project_budget=st.number_input(" 💵 Project Budget (TWD)",min_value=0.0,value=0.0,step=0.5,format="%.2f")
                         project_code=st.text_input("Please enter the project code")
-                        submitted = st.form_submit_button("Submit project",type='primary')
+                        submitted = st.form_submit_button("➕ Submit project",type='primary')
 
                         if submitted:
                             is_valid = True
@@ -207,6 +215,39 @@ try:
                                     time.sleep(1.5)
                                     st.rerun()
 
+                        data_for_projects = st.file_uploader(label="Upload the Project info", type=['csv'],key="upload_data_for_projects")
+
+                        df_project = None
+                        if data_for_projects:
+                            if data_for_projects.name.endswith(".csv"):
+                                df_project = pl.read_csv(data_file=data_for_projects)
+                                pd_df_for_projects = df_project.to_pandas()
+                                ui.element(name="")
+                                upload_button = ui.button(text="📤 Upload", key="Upload_project_data")
+                                confirmUploadProject = ui.alert_dialog(show=upload_button, title="Upload project",
+                                                                confirm_label="Upload project",
+                                                                cancel_label="don't upload project", description="",
+                                                                key="Upload_project_data_alert")
+                                if confirmUploadProject:
+                                    try:
+                                        conn = db.get_connection()
+                                        pd_df_for_projects.to_sql('Projects', conn, if_exists='replace', index=False)
+                                        conn.commit()
+
+                                    except Exception as e:
+                                        print("Database insert error:", e)
+
+                                    finally:
+                                        if conn:
+                                            conn.close()
+
+                                if not confirmUploadProject:
+                                    pass
+
+                            else:
+                                st.error("Please upload an excel(.csv) file")
+                                df = None
+
                 elif choices=="Update Project Info":
                         with st.form("update_project_form",enter_to_submit=True):
                             if len(project_names) == 0:
@@ -244,16 +285,16 @@ try:
 
 
 
+                removeAllProject=ui.button("🗑️ Remove all projects", key='styled_btn_tailwind_project', class_name="bg-red-600 text-white")
+                removeAllProjectAlert=ui.alert_dialog(show=removeAllProject,title="Remove all projects?",description="",confirm_label="YES",cancel_label="NO",key="alert_dialog_for_project")
+                if removeAllProjectAlert:
+                    db.clear_database(mode=0)
+                    st.success("All projects have been removed successfully")
 
 
 
 
-
-
-
-
-
-            with st.expander(" 🧑‍💼 Employee management"):
+            with st.expander("🧑‍💼 Employee management"):
                 choices=st.segmented_control("Select an process you would like to do",options=['Add a new employee','Remove an Employee',"Update employee info"], default="Add a new employee")
                 emp_names=db.get_employees()
                 if choices=="Remove an Employee":
@@ -264,7 +305,7 @@ try:
                         else:
                             emp_to_remove = st.selectbox("Enter the name the employee of the project you want to remove",
                                                        options=[""]+emp_names)
-                            submittedToRemoveEmp = st.form_submit_button(f"Remove Employee ", type='primary')
+                            submittedToRemoveEmp = st.form_submit_button(f"➖ Remove Employee ", type='primary')
 
                     if submittedToRemoveEmp and len(emp_to_remove)>0:
                         first_name, last_name = emp_to_remove.split(" ")
@@ -287,7 +328,7 @@ try:
                         email=st.text_input("✉️ Enter employee email")
                         ratePerHour=st.number_input(" 💵 Hourly Rate (TWD)",min_value=0.0, max_value=1000.0,value=0.0,step=0.5,format="%.2f")
                         emp_role=st.selectbox(label="Please select what role does this person have in the company", options=["",'CAD', 'Engineer','Admin','Management'])
-                        submittedEmp=st.form_submit_button(f"Add Employee ", type='primary')
+                        submittedEmp=st.form_submit_button(f"➕ Add Employee ", type='primary')
 
 
                     if submittedEmp:
@@ -342,7 +383,34 @@ try:
                                 time.sleep(0.5)
                                 st.rerun()
 
+                    data=st.file_uploader(label="Upload the employee info",type=['csv'])
 
+                    df_emp = None
+                    if data:
+                        if data.name.endswith(".csv"):
+                            df_emp = pl.read_csv(data)
+                            pd_df_emp=df_emp.to_pandas()
+                            upload_button=ui.button(text="📤 Upload",key="Upload_employee_data")
+                            confirmUploadEmp=ui.alert_dialog(show=upload_button,title="Upload employee",confirm_label="Upload employee",cancel_label="don't upload employee",description="",key="Upload_employee_data_alert")
+                            if confirmUploadEmp:
+                                try:
+                                    conn=db.get_connection()
+                                    pd_df_emp.to_sql('Employees', conn, if_exists='replace', index=False)
+                                    conn.commit()
+
+                                except Exception as e:
+                                    print("Database insert error:", e)
+
+                                finally:
+                                    if conn:
+                                        conn.close()
+
+                            if not confirmUploadEmp:
+                                pass
+
+                        else:
+                            st.error("Please upload an excel(.csv) file")
+                            df=None
 
 
 
@@ -389,6 +457,22 @@ try:
                                 st.success(f"Employee {emp_to_update} has been updated successfully")
                                 time.sleep(1)
                                 st.rerun()
+
+
+
+
+
+                removeAllEmployee=ui.button("🗑️ Remove all Employee", key='styled_btn_tailwind_for_emp', class_name="bg-red-600 text-white")
+                removeAllEmployeeAlert = ui.alert_dialog(show=removeAllEmployee, title="Remove all employees ?",
+                                                        description="",
+                                                        confirm_label="YES", cancel_label="NO",key="alert_dialog_for_emp")
+
+
+
+                if removeAllProjectAlert:
+                    db.clear_database(mode=0)
+                    st.success("All employee have been removed successfully")
+
 
 
         if st.button("Generate report", type="primary"):

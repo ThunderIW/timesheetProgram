@@ -11,6 +11,10 @@ def get_connection():
 
 
 
+
+
+
+
 def get_emp_ID(empCode:str):
     print("INSIDE",empCode)
     try:
@@ -36,6 +40,30 @@ def fetch_employees():
         return rows
     except sqlite3.Error as e:
         print(e)
+
+
+
+
+def clear_database(mode):
+    try:
+        conn=get_connection()
+        cursor=conn.cursor()
+        if mode==0:
+            cursor.execute("""
+            DELETE FROM Empolyees """)
+            conn.commit()
+            return True
+
+        if mode==1:
+            cursor.execute("""
+            DELETE FROM Projects """)
+            conn.commit()
+            return True
+    except sqlite3.IntegrityError as e:
+        return f"IntegrityError: {e}"
+    except sqlite3.Error as e:
+        return f"Database error: {e}"
+
 
 
 def insert_Work_done(employeeID:int,projectWorkedonID:int,StartTime:str,endTime:str):

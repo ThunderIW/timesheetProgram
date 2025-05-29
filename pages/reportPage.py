@@ -151,7 +151,7 @@ try:
                             )
 
                             # Cost info
-                            st.subheader("Split of Engineer and CAD Hours")
+                            st.subheader("⌛ Split of Engineer and CAD Hours")
                             col1C,col2C=st.columns(2,gap="small",border=True)
                             with col1C:
                                 st.markdown(
@@ -188,6 +188,7 @@ try:
                                     """,
                                     unsafe_allow_html=True
                                 )
+
                                 st.metric(
                                     label=f"💵 Cost of project **(TWD)** {project_code}:{project_name}",
                                     value=cost
