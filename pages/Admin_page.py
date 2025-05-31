@@ -102,6 +102,7 @@ try:
 
             else:
                 st.dataframe(data=project_df, use_container_width=True)
+                print(project_df)
                 current_count = len(project_df)
                 psd=project_df.write_csv()
 
@@ -215,7 +216,7 @@ try:
                                     time.sleep(1.5)
                                     st.rerun()
 
-                        data_for_projects = st.file_uploader(label="Upload the Project info", type=['csv'],key="upload_data_for_projects")
+                        data_for_projects = st.file_uploader(label="Upload the Project info", type=['csv'],key="upload_data_for_projects",accept_multiple_files=False)
 
                         df_project = None
                         if data_for_projects:
@@ -238,8 +239,11 @@ try:
                                         print("Database insert error:", e)
 
                                     finally:
-                                        if conn:
-                                            conn.close()
+                                        st.success(f"{data_for_projects.name} has been uploaded successfully")
+                                        conn.close()
+                                        time.sleep(0.5)
+                                        st.rerun()
+
 
                                 if not confirmUploadProject:
                                     pass
@@ -383,16 +387,19 @@ try:
                                 time.sleep(0.5)
                                 st.rerun()
 
-                    data=st.file_uploader(label="Upload the employee info",type=['csv'])
+                    data_for_emp=st.file_uploader(label="Upload the employee info",type=['csv'],accept_multiple_files=False)
 
                     df_emp = None
-                    if data:
-                        if data.name.endswith(".csv"):
-                            df_emp = pl.read_csv(data)
+                    if data_for_emp:
+                        if data_for_emp.name.endswith(".csv"):
+                            df_emp = pl.read_csv(data_for_emp,schema_overrides={"empCode":pl.Utf8,"EmpPassword":pl.Utf8})
+                            print(df_emp)
                             pd_df_emp=df_emp.to_pandas()
+                            #print(pd_df_emp)
                             upload_button=ui.button(text="📤 Upload",key="Upload_employee_data")
                             confirmUploadEmp=ui.alert_dialog(show=upload_button,title="Upload employee",confirm_label="Upload employee",cancel_label="don't upload employee",description="",key="Upload_employee_data_alert")
                             if confirmUploadEmp:
+
                                 try:
                                     conn=db.get_connection()
                                     pd_df_emp.to_sql('Employees', conn, if_exists='replace', index=False)
@@ -402,8 +409,11 @@ try:
                                     print("Database insert error:", e)
 
                                 finally:
-                                    if conn:
-                                        conn.close()
+                                    st.success(f"{data_for_emp.name} has been uploaded successfully")
+                                    conn.close()
+                                    time.sleep(0.5)
+                                    st.rerun()
+
 
                             if not confirmUploadEmp:
                                 pass
