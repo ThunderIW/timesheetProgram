@@ -38,12 +38,12 @@ if st.session_state.clear_project_name:
 
 # Load employee code
 user = db.get_emp_code()
+
 emp_list=[]
 for emp_id in user:
     first, last = db.get_emp_name_by_code(emp_id)
     codePlusName=f"{emp_id}: {first} {last}"
     emp_list.append(codePlusName)
-
 # Time formatting helper
 def getWorkingTime(type: int):
     correctedFormat = ""
@@ -72,11 +72,11 @@ if emp_code and emp_code != "":
     emp_number=str(emp_code.split(":")[0])
 
     emp_id = db.get_emp_ID(emp_number)[0]
-    print("emp_id",emp_id)
+    print("emp_id",type(emp_id))
     #print(emp_id)
 
     first, last = db.get_emp_name_by_code(emp_number)
-    st.write(f"Welcome **{first} {last}**")
+    st.markdown(f"Welcome <b>{first} {last}</b>",unsafe_allow_html=True)
     st.write(f"The current date and time is **{getWorkingTime(1)}**")
 
     if emp_code in st.session_state["clocked_in_user"]:

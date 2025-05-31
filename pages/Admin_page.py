@@ -108,7 +108,7 @@ try:
 
 
                 st.download_button(label=f"📥 Download {selected_table} to csv ",data=psd,file_name=f'{str(selected_table).lower().capitalize()}.csv',mime='text/csv',type="primary")
-
+                st.warning("Please after download tell excel to keep leading zeros")
 
 
             if "last_updated" not in st.session_state:
