@@ -4,7 +4,7 @@ import streamlit_authenticator as stauth
 import yaml
 from yaml.loader import SafeLoader
 import streamlit_shadcn_ui as ui
-from streamlit_app import databaseManagement as db
+import databaseManagement as db
 import polars as pl
 import arrow
 import plotly.graph_objects as go
