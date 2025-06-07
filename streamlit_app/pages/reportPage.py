@@ -237,8 +237,15 @@ try:
 
 
     if st.button("See project reports"):
-        with st.expander(label=f"Summary as **{getWorkingTime(1)}**"):
-            st.subheader("Overall")
+        if create_final_report_df().is_empty() and create_final_report_df().is_empty():
+            st.warning("No data available")
+        else:
+
+            with st.expander(label=f"Summary as **{getWorkingTime(1)}**"):
+                st.subheader("Overall")
+
+
+
             st.dataframe(create_final_report_df(),use_container_width=True)
             st.download_button(
                 label="Download report",
