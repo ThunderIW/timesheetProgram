@@ -47,6 +47,7 @@ def getWorkingTime(type: int):
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 APP_ROOT = os.path.abspath(os.path.join(BASE_DIR, '..'))
 CONFIG_PATH = os.path.join(APP_ROOT, 'config.yaml')
+LOGO_PATH=os.path.join(APP_ROOT, 'imgs',"wieconLogo.png")
 
 
 
@@ -77,7 +78,7 @@ def create_project_code_plus_name():
 
 
 # Login form
-st.image("wieconLogo.png")
+st.image(LOGO_PATH)
 try:
     authenticator.login(fields={'Form name': 'Admin Login', 'Username': 'Username', 'Password': 'Password'})
 

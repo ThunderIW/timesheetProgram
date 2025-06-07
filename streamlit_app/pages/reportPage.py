@@ -1,3 +1,5 @@
+import os
+
 import streamlit as st
 
 import streamlit_authenticator as stauth
@@ -88,7 +90,17 @@ authenticator = stauth.Authenticate(
     config['cookie']['expiry_days']
 )
 
-st.image("wieconLogo.png")
+
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+APP_ROOT = os.path.abspath(os.path.join(BASE_DIR, '..'))
+CONFIG_PATH = os.path.join(APP_ROOT, 'config.yaml')
+LOGO_PATH=os.path.join(APP_ROOT, 'imgs',"wieconLogo.png")
+
+
+
+
+st.image(LOGO_PATH)
 roles = st.session_state.get("roles", [])  # Safe fetch
 st.title("Report Page")
 

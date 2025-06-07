@@ -3,6 +3,9 @@ import streamlit as st
 import databaseManagement as db
 import arrow
 import streamlit_shadcn_ui as ui
+import os
+
+
 
 
 # Initialize session state keys safely
@@ -56,6 +59,10 @@ def getWorkingTime(type: int):
     if type == 1:
         correctedFormat = local.format(dateFormat)
     return correctedFormat
+
+
+
+
 
 
 st.image("wieconLogo.png")
