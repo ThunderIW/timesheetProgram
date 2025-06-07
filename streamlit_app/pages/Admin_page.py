@@ -153,7 +153,7 @@ try:
             st.subheader("💼 Management")
 
             with st.expander("➕➖ Add remove Update Projects"):
-                choices=st.segmented_control("Select an process you would like to do",options=['Add a new Project','Remove an Project',"Update Project Info"],default="Add a new Project")
+                choices=st.segmented_control("Select an process you would like to do",options=['Add a new Project','Remove an Project',"Update Project Info","Add A project Cost"],default="Add a new Project")
 
 
                 project_names = db.get_project_names()
@@ -309,6 +309,40 @@ try:
                                         st.success(f"Project {project_to_update} has been updated successfully")
                                         time.sleep(1.5)
                                         st.rerun()
+
+                elif choices=="Add A project Cost":
+
+                    with st.form("update_project_form", enter_to_submit=True):
+                        project=st.selectbox("Please select a project you want to add this project cost to",options=[""]+create_project_code_plus_name())
+                        #category=st.selectbox(label="Please select a category", options=["","Flight","Food"])
+                        reason=st.text_input("Please enter a description for this cost")
+                        cost = st.number_input("💵 Enter cost (in TWD)", min_value=0.0, step=10.0, format="%.2f")
+                        add_project_cost_button=st.form_submit_button(f"Add a project cost", type='primary')
+
+                        if add_project_cost_button:
+                            if cost==0 and len(reason)==0 and len(project)==0:
+                                st.error(
+                                    "❌ Please fill in all required fields: Description, the cost, the project you would like to add the cost to")
+                            if cost==0 and len(reason)>0 and len(project)>0:
+                                st.error("❌ Please enter a valid **Amount**.")
+
+
+                            if len(reason)==0 and cost>0 and len(project)>0:
+                                st.error("❌ Please enter a description.")
+
+
+                            if len(project)==0 and len(reason)>0 and cost>0:
+                                st.error("❌ Please select the project.")
+
+
+                            if cost>0 and len(reason)>0 and len(project)>0:
+                                project_code=str(project).split(":")[0]
+                                st.success(f"Project cost has been successfully added to {project}")
+                                db.insert_into_project_cost_table(reason,cost, project_code)
+
+
+
+
 
 
 

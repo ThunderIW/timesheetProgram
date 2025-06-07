@@ -18,7 +18,6 @@ def get_connection():
 
 
 
-
 def get_emp_ID(empCode:str):
     print("INSIDE",empCode)
     try:
@@ -647,6 +646,24 @@ def get_CAD_and_engineer_hours(projectCode:str,retrieve:str):
         return f"Database error: {e}"
 
 
+
+def insert_into_project_cost_table(reason:str,amount:float,projectCode:str):
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+           INSERT INTO ProjectCosts(projectID,amount,description) VALUES (?,?,?)
+
+           """, (projectCode,amount,reason))
+        conn.commit()
+        return "success"
+
+    except sqlite3.IntegrityError as e:
+        return f"Integrity error: {e}"
+    except sqlite3.Error as e:
+        return f"Database error: {e}"
+    finally:
+        conn.close()
 
 
 
