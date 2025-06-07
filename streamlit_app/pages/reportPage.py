@@ -11,7 +11,7 @@ import polars as pl
 import arrow
 import plotly.graph_objects as go
 
-from streamlit_app.pages.Admin_page import CONFIG_PATH
+
 
 bar_width=0.2
 
