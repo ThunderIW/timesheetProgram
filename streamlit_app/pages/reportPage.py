@@ -10,6 +10,9 @@ import databaseManagement as db
 import polars as pl
 import arrow
 import plotly.graph_objects as go
+
+from streamlit_app.pages.Admin_page import CONFIG_PATH
+
 bar_width=0.2
 
 
@@ -75,10 +78,14 @@ def getWorkingTime(type: int):
 
 
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+APP_ROOT = os.path.abspath(os.path.join(BASE_DIR, '..'))
+CONFIG_PATH_R = os.path.join(APP_ROOT, 'config.yaml')
+LOGO_PATH=os.path.join(APP_ROOT, 'imgs',"wieconLogo.png")
 
 
 
-with open('config.yaml') as file:
+with open(CONFIG_PATH_R) as file:
     config = yaml.load(file, Loader=SafeLoader)
 
 stauth.Hasher.hash_passwords(config['credentials'])
@@ -92,10 +99,6 @@ authenticator = stauth.Authenticate(
 
 
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-APP_ROOT = os.path.abspath(os.path.join(BASE_DIR, '..'))
-CONFIG_PATH = os.path.join(APP_ROOT, 'config.yaml')
-LOGO_PATH=os.path.join(APP_ROOT, 'imgs',"wieconLogo.png")
 
 
 
