@@ -1,19 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="OFFICE.db" uuid="b21d3765-b95e-49d2-8310-191730d45e2c">
+    <data-source source="LOCAL" name="office" uuid="cd19bee0-1add-4bcf-a4d9-2d90405d9f0b">
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
-      <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/OFFICE.db</jdbc-url>
+      <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/streamlit_app/office</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
-    <data-source source="LOCAL" name="OFFICE.db [2]" uuid="6cc47898-79b9-4f44-ade0-c1681d6773ee">
+    <data-source source="LOCAL" name="OFFICE" uuid="784e761b-9cfe-4b86-8e44-8b0e0bd4fc22">
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
-      <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/OFFICE.db</jdbc-url>
+      <jdbc-url>jdbc:sqlite:D:\Python Project\timesheetProgram\streamlit_app\OFFICE.sqlite</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
+      <libraries>
+        <library>
+          <url>file://$APPLICATION_CONFIG_DIR$/jdbc-drivers/Xerial SQLiteJDBC/3.45.1/org/xerial/sqlite-jdbc/3.45.1.0/sqlite-jdbc-3.45.1.0.jar</url>
+        </library>
+        <library>
+          <url>file://$APPLICATION_CONFIG_DIR$/jdbc-drivers/Xerial SQLiteJDBC/3.45.1/org/slf4j/slf4j-api/1.7.36/slf4j-api-1.7.36.jar</url>
+        </library>
+      </libraries>
     </data-source>
   </component>
 </project>

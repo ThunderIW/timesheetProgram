@@ -4,7 +4,7 @@ import polars as pl
 import  os
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-DB_NAME = os.path.join(ROOT_DIR, 'streamlit_app', 'OFFICE.db')
+DB_NAME = os.path.join(ROOT_DIR, 'streamlit_app', 'OFFICE.sqlite')
 
 
 
