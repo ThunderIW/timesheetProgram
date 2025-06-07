@@ -665,6 +665,26 @@ def insert_into_project_cost_table(reason:str,amount:float,projectCode:str):
     finally:
         conn.close()
 
+def get_additional_Cost(projectCode:str):
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+        SELECT SUM(amount) as total_additonal_cost
+        FROM ProjectCosts
+        WHERE projectID=?
+
+       
+       
+        """,(projectCode,))
+        rows = cursor.fetchone()
+        conn.close()
+        return rows
+    except sqlite3.Error as e:
+        return f"Database error: {e}"
+
+
+
 
 
 

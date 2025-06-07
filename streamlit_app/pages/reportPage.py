@@ -1,9 +1,11 @@
 import os
+from cProfile import label
 
 import streamlit as st
 
 import streamlit_authenticator as stauth
 import yaml
+from tensorflow.python.framework.test_ops import kernel_label
 from yaml.loader import SafeLoader
 import streamlit_shadcn_ui as ui
 import databaseManagement as db
@@ -134,8 +136,10 @@ try:
                     Pn, Pd, Pc = project_info if project_info and len(project_info) == 3 else ("N/A", "N/A", "N/A")
                     Engineer_work_hours=db.get_CAD_and_engineer_hours(project_code,"Engineer")
                     CAD_Work_hours=db.get_CAD_and_engineer_hours(project_code,"CAD")
+                    get_additional_cost_of_project=db.get_additional_Cost(project_code)[0]
                     print(CAD_Work_hours)
                     print(Engineer_work_hours)
+
 
                     # Check if any project info is missing
                     if not people_who_worked or total_hours == 0 or cost == 0 or remaining_budget == 0 or Pn == "N/A":
@@ -204,7 +208,7 @@ try:
 
 
                             st.subheader("💵 COST info and ⌛ Total  Project Hours")
-                            col1, col2,col3 = st.columns(3, gap="small", border=True)
+                            col1, col2,col3,col4 = st.columns(4, gap="small", border=True)
                             with col1:
                                 st.markdown(
                                     """
@@ -215,8 +219,8 @@ try:
 
 
                                 st.metric(
-                                    label=f"💵 Cost of project **(TWD)** {project_code}:{project_name}",
-                                    value=cost
+                                    label=f"💵 Cost of project **(TWD)** {project_code}",
+                                    value=cost+get_additional_cost_of_project
 
                                 )
                             with col2:
@@ -240,8 +244,17 @@ try:
                                     unsafe_allow_html=True
                                 )
 
-                                st.metric(label="💵 Remaining Budget", value=round(remaining_budget))
+                                st.metric(label="💵 Remaining Budget", value=round(remaining_budget-get_additional_cost_of_project))
                             # Download CSV
+                            with col4:
+                                st.markdown(
+                                    """
+                                    <div style="background-color:#e6f7ff; padding:20px; border-radius:10px;">
+                                    """,
+                                    unsafe_allow_html=True
+                                )
+                                st.metric(label="💸 Additional Cost (TWD)", value=f"{get_additional_cost_of_project:,.2f}")
+                            st.subheader("📦 Additional COST Breakdown")
 
 
     if st.button("See project reports"):
