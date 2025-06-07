@@ -61,11 +61,13 @@ def getWorkingTime(type: int):
     return correctedFormat
 
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+LOGO_PATH=os.path.join(BASE_DIR, "imgs","wieconLogo.png")
 
 
 
-
-st.image("wieconLogo.png")
+st.image(LOGO_PATH)
 st.title('Wiecon Time Management System')
 
 # ✅ Selectbox for employee code (with blank option for reset)
