@@ -1,3 +1,5 @@
+import os
+
 import streamlit as st
 import streamlit_authenticator as stauth
 import yaml
@@ -42,8 +44,13 @@ def getWorkingTime(type: int):
     return correctedFormat
 
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+APP_ROOT = os.path.abspath(os.path.join(BASE_DIR, '..'))
+CONFIG_PATH = os.path.join(APP_ROOT, 'config.yaml')
 
-with open('config.yaml') as file:
+
+
+with open(CONFIG_PATH) as file:
     config = yaml.load(file, Loader=SafeLoader)
 
 # Hash passwords if needed

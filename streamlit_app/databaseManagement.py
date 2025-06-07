@@ -1,8 +1,12 @@
 import sqlite3
 import arrow
 import polars as pl
+import  os
 
-DB_NAME='OFFICE.db'
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+DB_NAME = os.path.join(ROOT_DIR, 'streamlit_app', 'OFFICE.db')
+
+
 
 def get_connection():
     return sqlite3.connect(DB_NAME,check_same_thread=False)
