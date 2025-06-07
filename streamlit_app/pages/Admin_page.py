@@ -46,13 +46,13 @@ def getWorkingTime(type: int):
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 APP_ROOT = os.path.abspath(os.path.join(BASE_DIR, '..'))
-CONFIG_PATH = os.path.join(APP_ROOT, 'config.yaml')
+CONFIG_PATH_A = os.path.join(APP_ROOT, 'config.yaml')
 LOGO_PATH=os.path.join(APP_ROOT, 'imgs',"wieconLogo.png")
 login_sound=os.path.join(APP_ROOT,"login.wav" )
 
 
 
-with open(CONFIG_PATH) as file:
+with open(CONFIG_PATH_A) as file:
     config = yaml.load(file, Loader=SafeLoader)
 
 # Hash passwords if needed
@@ -85,7 +85,7 @@ try:
 
 
     if st.session_state.get("authentication_status") is True:
-        st.audio("login.wav", format='audio/wav', autoplay=True, )
+        st.audio(login_sound, format='audio/wav', autoplay=True)
         username = st.session_state.get('username')
         user_info = config['credentials']['usernames'].get(username, {})
         user_roles = user_info.get('roles', [])
