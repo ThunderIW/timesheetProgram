@@ -1,16 +1,10 @@
-from cProfile import label
-from pydoc import classname
-
-import pandas as pd
 import streamlit as st
 import streamlit_authenticator as stauth
 import yaml
 from yaml.loader import SafeLoader
 import arrow
-from streamlit_autorefresh import st_autorefresh
-import databaseManagement as db
+import databaseManagement  as db
 import streamlit_shadcn_ui as ui
-import pygwalker as pyg
 import time
 import polars as pl
 
@@ -102,7 +96,7 @@ try:
 
             else:
                 st.dataframe(data=project_df, use_container_width=True)
-                print(project_df)
+                #print(project_df)
                 current_count = len(project_df)
                 psd=project_df.write_csv()
 
@@ -459,7 +453,7 @@ try:
                                 first_name,last_name=emp_to_update.split(" ")
                                 try:
                                     money=int(updated_value)
-                                    print(db.update_emp_info(first_name,last_name,money))
+                                    #print(db.update_emp_info(first_name,last_name,money))
 
                                 except ValueError:
                                     email=updated_value
