@@ -82,7 +82,7 @@ def create_project_code_plus_name():
 # Login form
 st.image(LOGO_PATH)
 try:
-    authenticator.login(fields={'Form name': 'Admin Login', 'Username': 'Username', 'Password': 'Password'})
+    authenticator.login(fields={'Form name': 'Admin Login', 'Username': 'Username', 'Password': 'Password'},captcha=True)
 
 
     if st.session_state.get("authentication_status") is True:
@@ -91,10 +91,29 @@ try:
         user_info = config['credentials']['usernames'].get(username, {})
         user_roles = user_info.get('roles', [])
         st.title("👩‍💼💻🔑 Admin Page")
+        st.subheader(f"Welcome **{st.session_state.get('name')}**")
         if username == 'boris' and "CEO" in user_roles:
-            st.subheader(f"Welcome **{st.session_state.get('name')}**")
             st.write(f"The current date and time is **{getWorkingTime(1)}**")
             st.success("you are logged in as a CEO 👨")
+
+            with  st.expander("Create new admin accounts",icon="🔑"):
+                try:
+                    email_of_registered_user, \
+                        username_of_registered_user, \
+                        name_of_registered_user = authenticator.register_user(roles=["admin"],password_hint=False,clear_on_submit=True)
+                    if email_of_registered_user:
+                        st.success('User registered successfully')
+                except Exception as e:
+                    st.error(e)
+
+            with open(CONFIG_PATH_A, 'w') as file:
+                yaml.dump(config, file, default_flow_style=False, allow_unicode=True)
+
+
+
+
+
+
 
             tables_names = db.get_table_names()
             selected_table = st.selectbox("Select a table to view", tables_names)

@@ -1,5 +1,5 @@
 cookie:
-  expiry_days: 2
+  expiry_days: 100
   key: f3d9c8a4e2b1478da2f6b5c4de9a78bc
   name: auth_cookie
 credentials:
@@ -13,3 +13,11 @@ credentials:
       password: $2b$12$aQAZto2jsgpTL.KB.gOR0e90URg3LBtYu90cexKE/sun5GEq8fITy
       roles:
       - CEO
+    iwiessle:
+      email: im.wiessler@gmail.com
+      first_name: Immanuel
+      last_name: Wiessler
+      logged_in: false
+      password: $2b$12$ZoyQoT3JQVdS9xXE4/8V..1lxcYWTwisx0ZL9mePagX0tIKAEaB4G
+      roles:
+      - admin

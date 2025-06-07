@@ -134,15 +134,17 @@ try:
                     Pn, Pd, Pc = project_info if project_info and len(project_info) == 3 else ("N/A", "N/A", "N/A")
                     Engineer_work_hours=db.get_CAD_and_engineer_hours(project_code,"Engineer")
                     CAD_Work_hours=db.get_CAD_and_engineer_hours(project_code,"CAD")
+                    print(CAD_Work_hours)
+                    print(Engineer_work_hours)
 
                     # Check if any project info is missing
                     if not people_who_worked or total_hours == 0 or cost == 0 or remaining_budget == 0 or Pn == "N/A":
                         st.warning("No data available")
                     else:
-                        with st.expander(
+                        with (st.expander(
                             f"STATS about: **{project_code}  {project_name}** as of **{getWorkingTime(1)}**",
                             expanded=True
-                        ):
+                        )):
                             # General info
                             st.subheader("General info on project")
                             st.write(f"**Project name**: {Pn}")
@@ -177,9 +179,11 @@ try:
                                     """,
                                     unsafe_allow_html=True
                                 )
-                                if Engineer_work_hours>=1:
-                                    st.metric(label="⌛Engineer Hours",value=Engineer_work_hours)
-                                else:
+
+                                if Engineer_work_hours is not None:
+                                    if  Engineer_work_hours>=1:
+                                        st.metric(label="⌛Engineer Hours",value=Engineer_work_hours)
+                                if Engineer_work_hours is None or Engineer_work_hours<1:
                                     st.metric(label="⌛ Engineer Hours",value=0)
 
                             with col2C:
@@ -189,9 +193,12 @@ try:
                                     """,
                                     unsafe_allow_html=True
                                 )
-                                if CAD_Work_hours>=1:
-                                    st.metric(label="⌛ CAD Hours",value=CAD_Work_hours)
-                                else:
+
+                                if CAD_Work_hours is not None:
+                                    if CAD_Work_hours>=1:
+
+                                        st.metric(label="⌛ CAD Hours",value=CAD_Work_hours)
+                                if CAD_Work_hours is  None or CAD_Work_hours<1:
                                     st.metric(label="⌛ CAD Hours",value=0)
 
 
@@ -205,6 +212,7 @@ try:
                                     """,
                                     unsafe_allow_html=True
                                 )
+
 
                                 st.metric(
                                     label=f"💵 Cost of project **(TWD)** {project_code}:{project_name}",
@@ -322,6 +330,7 @@ try:
 
 except TypeError as e:
     error_message = str(e)
+    print(error_message)
     if "NoneType" in error_message:
         st.error("❌ Access denied. You are not authorized to view this page.")
         if st.button("Login", type="secondary"):

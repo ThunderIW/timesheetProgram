@@ -172,6 +172,8 @@ def calculate_total_hours_worked(empID):
             end_time = end_time.shift(days=1)
 
         worked_hours = round((end_time - start_time).total_seconds() / 3600, 2)
+        if worked_hours>8:
+            worked_hours=8
         print(worked_hours)
         cursor.execute("""
                     UPDATE HOURSWORKED
@@ -624,7 +626,7 @@ def get_CAD_and_engineer_hours(projectCode:str,retrieve:str):
             FROM HOURSWORKED H
             JOIN Projects P ON P.projectID = H.projectWorkedONID
             JOIN Employees E ON E.employeeID = H.employeeID
-            WHERE E.Role='Engineer';
+            WHERE E.Role='CAD';
             """)
             rows = cursor.fetchone()
             conn.close()
@@ -636,13 +638,14 @@ def get_CAD_and_engineer_hours(projectCode:str,retrieve:str):
             FROM HOURSWORKED H
             JOIN Projects P ON P.projectID = H.projectWorkedONID
             JOIN Employees E ON E.employeeID = H.employeeID
-            WHERE E.Role='CAD';
+            WHERE E.Role='Engineer';
             """)
             rows = cursor.fetchone()
             conn.close()
             return rows[0]
     except sqlite3.Error as e:
         return f"Database error: {e}"
+
 
 
 
