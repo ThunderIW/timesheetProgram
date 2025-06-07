@@ -49,7 +49,7 @@ APP_ROOT = os.path.abspath(os.path.join(BASE_DIR, '..'))
 CONFIG_PATH_A = os.path.join(APP_ROOT, 'config.yaml')
 LOGO_PATH=os.path.join(APP_ROOT, 'imgs',"wieconLogo.png")
 login_sound=os.path.join(APP_ROOT,"sounds","login.wav" )
-print(login_sound)
+
 
 
 
