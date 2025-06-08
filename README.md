@@ -21,6 +21,7 @@ A Python-based timesheet management application designed to streamline employee 
 - **Audio Notifications**: Incorporates `login.wav` for auditory alerts.
 - **User Interface**: Accessible through HTML pages located in the `pages/` directory.
 - **Branding**: Features company branding with `wieconLogo.png`.
+- **Creation of new admin and login page**: using a third-party plugin [Streamlit-Authenticator](https://github.com/mkhorasani/Streamlit-Authenticator) to create a login page to login into the admin page and within the admin page the creation of new admin which the CEO of the compnay has access
 
 
 
