@@ -314,7 +314,7 @@ try:
 
                     with st.form("update_project_form", enter_to_submit=True):
                         project=st.selectbox("Please select a project you want to add this project cost to",options=[""]+create_project_code_plus_name())
-                        #category=st.selectbox(label="Please select a category", options=["","Flight","Food"])
+                        category=st.selectbox(label="Please select a category", options=["","Flight","Hotel"])
                         reason=st.text_input("Please enter a description for this cost")
                         cost = st.number_input("💵 Enter cost (in TWD)", min_value=0.0, step=10.0, format="%.2f")
                         add_project_cost_button=st.form_submit_button(f"Add a project cost", type='primary')
@@ -338,7 +338,7 @@ try:
                             if cost>0 and len(reason)>0 and len(project)>0:
                                 project_code=str(project).split(":")[0]
                                 st.success(f"Project cost has been successfully added to {project}")
-                                db.insert_into_project_cost_table(reason,cost, project_code)
+                                db.insert_into_project_cost_table(reason,cost, project_code,category)
 
 
 
@@ -356,7 +356,7 @@ try:
 
 
             with st.expander("🧑‍💼 Employee management"):
-                choices=st.segmented_control("Select an process you would like to do",options=['Add a new employee','Remove an Employee',"Update employee info"], default="Add a new employee")
+                choices=st.segmented_control("Select an process you would like to do",options=['Add a new employee','Remove an Employee',"Update employee info","Update Employee work Time"], default="Add a new employee",)
                 emp_names=db.get_employees()
                 if choices=="Remove an Employee":
                     with st.form("remove_employee_form"):

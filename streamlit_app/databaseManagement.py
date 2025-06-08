@@ -150,39 +150,49 @@ def get_times(employeeID: str):
 
 def calculate_total_hours_worked(empID):
     try:
-        print("HIT_3")
         conn = get_connection()
         cursor = conn.cursor()
+
+        # ✅ Get the latest session that has both StartTime and EndTime filled
         cursor.execute("""
-        SELECT StartTime,EndTime FROM HOURSWORKED WHERE employeeID=? LIMIT 1
-        """,(empID,))
-        rows=cursor.fetchall()
+            SELECT StartTime, EndTime, sessionDate 
+            FROM HOURSWORKED 
+            WHERE employeeID = ? AND EndTime IS NOT NULL AND EndTime != ''
+            ORDER BY HoursWorkedID DESC
+            LIMIT 1
+        """, (empID,))
+        row = cursor.fetchone()
 
-        today = arrow.now().format("YYYY-MM-DD")
-        print(today)
-        start_str = rows[0][0]
-        end_str = rows[0][1]
-        print(start_str)
-        print(end_str)
+        if not row:
+            print("⚠️ No completed session found.")
+            return
 
-        start_time = arrow.get(f"{today} {start_str}", "YYYY-MM-DD HH:mm")
-        end_time = arrow.get(f"{today} {end_str}", "YYYY-MM-DD HH:mm")
+        start_str, end_str, session_date = row
+        print(f"Start: {start_str}, End: {end_str}, Date: {session_date}")
+
+        start_time = arrow.get(f"{session_date} {start_str}", "YYYY-MM-DD HH:mm")
+        end_time = arrow.get(f"{session_date} {end_str}", "YYYY-MM-DD HH:mm")
+
         if end_time < start_time:
+            # Assume end is on next day
             end_time = end_time.shift(days=1)
 
-        worked_hours = round((end_time - start_time).total_seconds() / 3600, 2)
-        if worked_hours>8:
-            worked_hours=8
-        print(worked_hours)
+        worked_hours = round((end_time - start_time).total_seconds() / 3600, 4)
+        print(f"Worked Hours: {worked_hours}")
+
+        # ✅ Update only that session
         cursor.execute("""
-                    UPDATE HOURSWORKED
-                    SET totalHoursWorked = ?
-                    WHERE employeeID  = ?
-                """, (worked_hours, empID))
+            UPDATE HOURSWORKED
+            SET totalHoursWorked = ?
+            WHERE employeeID = ? AND StartTime = ? AND sessionDate = ?
+        """, (worked_hours, empID, start_str, session_date))
+
         conn.commit()
 
     except sqlite3.Error as e:
-        print(e)
+        print(f"Database error: {e}")
+    finally:
+        conn.close()
 
 
 
@@ -647,14 +657,14 @@ def get_CAD_and_engineer_hours(projectCode:str,retrieve:str):
 
 
 
-def insert_into_project_cost_table(reason:str,amount:float,projectCode:str):
+def insert_into_project_cost_table(reason:str,amount:float,projectCode:str,category:str):
     try:
         conn = get_connection()
         cursor = conn.cursor()
         cursor.execute("""
-           INSERT INTO ProjectCosts(projectID,amount,description) VALUES (?,?,?)
+           INSERT INTO ProjectCosts(projectID,amount,description,Category) VALUES (?,?,?,?)
 
-           """, (projectCode,amount,reason))
+           """, (projectCode,amount,reason,category))
         conn.commit()
         return "success"
 
@@ -682,6 +692,24 @@ def get_additional_Cost(projectCode:str):
         return rows
     except sqlite3.Error as e:
         return f"Database error: {e}"
+
+def get_additional_cost_by_category(projectCode:str):
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+        SELECT Category, SUM(amount) as additonal_cost_per_project_category From ProjectCosts
+        WHERE projectID=?
+        GROUP BY Category;
+        """,(projectCode,))
+        rows = cursor.fetchall()
+        conn.close()
+        return rows
+    except sqlite3.Error as e:
+        return f"Database error: {e}"
+
+
+
 
 
 

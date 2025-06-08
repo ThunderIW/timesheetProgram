@@ -142,3 +142,6 @@ if emp_code and emp_code != "":
 
     else:
         st.error("❌ Invalid employee code.")
+
+
+

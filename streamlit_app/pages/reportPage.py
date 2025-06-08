@@ -255,6 +255,20 @@ try:
                                 )
                                 st.metric(label="💸 Additional Cost (TWD)", value=f"{get_additional_cost_of_project:,.2f}")
                             st.subheader("📦 Additional COST Breakdown")
+                            project_breakdown=db.get_additional_cost_by_category(project_code)
+
+                            for i in project_breakdown:
+                                st.markdown(
+                                    """
+                                    <div style="background-color:#e6f7ff; padding:20px; border-radius:10px;">
+                                    """,
+                                    unsafe_allow_html=True
+                                )
+                                Category=i[0]
+                                Amount=i[1]
+                                st.metric(label=f"{Category} Cost",value=Amount)
+
+
 
 
     if st.button("See project reports"):
