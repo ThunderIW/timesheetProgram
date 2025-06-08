@@ -3,6 +3,9 @@ import arrow
 import polars as pl
 import  os
 
+from duckdb.duckdb import cursor
+
+
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 DB_NAME = os.path.join(ROOT_DIR, 'streamlit_app', 'OFFICE.sqlite')
 
@@ -146,6 +149,39 @@ def get_times(employeeID: str):
         return []
 
 
+def update_unClock_emp(empID:int):
+    try:
+        conn = get_connection()
+        cursor=conn.cursor()
+        cursor.execute("""
+        SELECT HoursWorkedID, StartTime
+        FROM HOURSWORKED
+        WHERE employeeID = ? AND (EndTime IS NULL OR EndTime='')
+        ORDER BY HoursWorkedID DESC
+        """,(empID,))
+        result=cursor.fetchone()
+        if result:
+            hours_worked_id,start_time_str=result
+            try:
+                start_time=arrow.get(start_time_str).to('Asia/Taipei')
+            except arrow.parser.ParserError:
+                start_time=arrow.get(start_time_str,'HH:mm')
+
+
+            end_time=start_time.shift(hours=8)
+            end_time_str=end_time.format("HH:mm")
+            cursor.execute("""
+            UPDATE HOURSWORKED
+            SET EndTime = ?, projectWorkedONID = ? , totalHoursWorked=8
+            
+            """,(end_time_str,hours_worked_id))
+
+            conn.commit()
+    except sqlite3.Error as e:
+        return f"Database error: {e}"
+
+    finally:
+        conn.close()
 
 
 def calculate_total_hours_worked(empID):
@@ -239,6 +275,28 @@ def get_projects_code(project_name:str=""):
     except sqlite3.Error as e:
         return f"Database error: {e}"
 
+
+def find_not_clocked_out_employee():
+    try:
+        conn=get_connection()
+        cursor=conn.cursor()
+        cursor.execute("""
+        SELECT E.firstName , E.lastName, E.empCode
+        FROM HOURSWORKED H
+        JOIN Employees E ON H.employeeID = E.employeeID
+    WHERE
+    (H.totalHoursWorked IS NULL OR H.totalHoursWorked = '')
+    AND
+    (H.EndTime IS NULL OR H.EndTime = '');
+
+        
+        
+        """)
+        rows = cursor.fetchall()
+        conn.close()
+        return rows
+    except sqlite3.Error as e:
+        return f"Database error: {e}"
 
 
 def remove_emp(name:str):

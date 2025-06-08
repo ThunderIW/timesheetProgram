@@ -15,6 +15,8 @@ import polars as pl
 submittedToRemoveEmp = False
 submittedEmp = False
 emp_to_remove=False
+person_name = []
+
 
 def generate_next_emp_number():
     # Get the highest current emp_number
@@ -96,7 +98,7 @@ try:
             st.write(f"The current date and time is **{getWorkingTime(1)}**")
             st.success("you are logged in as a CEO 👨")
 
-            with  st.expander("Create new admin accounts",icon="🔑"):
+            with st.expander("Create new admin accounts",icon="🔑"):
                 try:
                     email_of_registered_user, \
                         username_of_registered_user, \
@@ -105,6 +107,40 @@ try:
                         st.success('User registered successfully')
                 except Exception as e:
                     st.error(e)
+
+            not_clocked_out_emp = db.find_not_clocked_out_employee()
+            if len(not_clocked_out_emp) >=1:
+                for emp in not_clocked_out_emp:
+                    first_name = emp[0]
+                    last_name = emp[1]
+                    emp_code = emp[2]
+                    person_name.append(f"{emp_code}: {first_name} {last_name}")
+
+
+                with st.expander("👨 Fill in not clocked_out Employee"):
+
+
+                    with st.form("Update Employee clock out"):
+                        person_to_update=st.selectbox(label="Chose a person to log their time",options=[""]+person_name)
+
+
+
+                        submit_update_person_clock_out_time=st.form_submit_button("Fill in not clocked_out_Employee",type="primary")
+                    if len(person_to_update)==0:
+                        st.error("❌ Please Select which employee you want to update")
+                    if  submit_update_person_clock_out_time and len(person_to_update)>0:
+                        person_id=int(str(person_to_update).split(":")[0][2:])
+                        person_name=str(person_to_update).split(":")[1].strip()
+                        print(person_name)
+                        db.update_unClock_emp(person_id)
+                        st.success(f"{person_name}'s worked hour has been updated to 8 hours")
+
+
+
+
+
+
+
 
             with open(CONFIG_PATH_A, 'w') as file:
                 yaml.dump(config, file, default_flow_style=False, allow_unicode=True)
@@ -356,7 +392,7 @@ try:
 
 
             with st.expander("🧑‍💼 Employee management"):
-                choices=st.segmented_control("Select an process you would like to do",options=['Add a new employee','Remove an Employee',"Update employee info","Update Employee work Time"], default="Add a new employee",)
+                choices=st.segmented_control("Select an process you would like to do",options=['Add a new employee','Remove an Employee',"Update employee info"], default="Add a new employee",)
                 emp_names=db.get_employees()
                 if choices=="Remove an Employee":
                     with st.form("remove_employee_form"):
