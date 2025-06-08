@@ -172,9 +172,9 @@ def update_unClock_emp(empID:int):
             end_time_str=end_time.format("HH:mm")
             cursor.execute("""
             UPDATE HOURSWORKED
-            SET EndTime = ?, projectWorkedONID = ? , totalHoursWorked=8
+            SET EndTime = ?,totalHoursWorked=8
             
-            """,(end_time_str,hours_worked_id))
+            """,(end_time_str,))
 
             conn.commit()
     except sqlite3.Error as e:
@@ -287,7 +287,8 @@ def find_not_clocked_out_employee():
     WHERE
     (H.totalHoursWorked IS NULL OR H.totalHoursWorked = '')
     AND
-    (H.EndTime IS NULL OR H.EndTime = '');
+    (H.EndTime IS NULL OR H.EndTime = '')
+    LIMIT 1;
 
         
         

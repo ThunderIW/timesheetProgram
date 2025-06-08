@@ -5,7 +5,6 @@ import streamlit as st
 
 import streamlit_authenticator as stauth
 import yaml
-from tensorflow.python.framework.test_ops import kernel_label
 from yaml.loader import SafeLoader
 import streamlit_shadcn_ui as ui
 import databaseManagement as db
@@ -136,7 +135,8 @@ try:
                     Pn, Pd, Pc = project_info if project_info and len(project_info) == 3 else ("N/A", "N/A", "N/A")
                     Engineer_work_hours=db.get_CAD_and_engineer_hours(project_code,"Engineer")
                     CAD_Work_hours=db.get_CAD_and_engineer_hours(project_code,"CAD")
-                    get_additional_cost_of_project=db.get_additional_Cost(project_code)[0]
+                    result_for_additional_cost = db.get_additional_Cost(project_code)
+                    get_additional_cost_of_project = result_for_additional_cost[0] if result_for_additional_cost and result_for_additional_cost[0] else 0
                     print(CAD_Work_hours)
                     print(Engineer_work_hours)
 
@@ -256,17 +256,19 @@ try:
                                 st.metric(label="💸 Additional Cost (TWD)", value=f"{get_additional_cost_of_project:,.2f}")
                             st.subheader("📦 Additional COST Breakdown")
                             project_breakdown=db.get_additional_cost_by_category(project_code)
-
-                            for i in project_breakdown:
-                                st.markdown(
-                                    """
-                                    <div style="background-color:#e6f7ff; padding:20px; border-radius:10px;">
-                                    """,
+                            if len(project_breakdown)==0:
+                                st.warning("No additional cost available")
+                            if len(project_breakdown)>0:
+                                for i in project_breakdown:
+                                    st.markdown(
+                                        """
+                                        <div style="background-color:#e6f7ff; padding:20px; border-radius:10px;">
+                                        """,
                                     unsafe_allow_html=True
-                                )
-                                Category=i[0]
-                                Amount=i[1]
-                                st.metric(label=f"{Category} Cost",value=Amount)
+                                    )
+                                    Category=i[0]
+                                    Amount=i[1]
+                                    st.metric(label=f"{Category} Cost",value=Amount)
 
 
 

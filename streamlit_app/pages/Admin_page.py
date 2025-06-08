@@ -117,7 +117,7 @@ try:
                     person_name.append(f"{emp_code}: {first_name} {last_name}")
 
 
-                with st.expander("👨 Fill in not clocked_out Employee"):
+                with st.expander(f"👨 Fill in not clocked out Employee for today {getWorkingTime(1)} "):
 
 
                     with st.form("Update Employee clock out"):
@@ -126,14 +126,17 @@ try:
 
 
                         submit_update_person_clock_out_time=st.form_submit_button("Fill in not clocked_out_Employee",type="primary")
-                    if len(person_to_update)==0:
+                    if len(person_to_update)==0 and submit_update_person_clock_out_time:
                         st.error("❌ Please Select which employee you want to update")
+
                     if  submit_update_person_clock_out_time and len(person_to_update)>0:
                         person_id=int(str(person_to_update).split(":")[0][2:])
                         person_name=str(person_to_update).split(":")[1].strip()
                         print(person_name)
                         db.update_unClock_emp(person_id)
                         st.success(f"{person_name}'s worked hour has been updated to 8 hours")
+                        time.sleep(2.0)
+                        st.rerun()
 
 
 
